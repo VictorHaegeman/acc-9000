@@ -34,7 +34,7 @@ svg.i{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-
 
 /* ---------- app bar ---------- */
 .appbar{position:sticky;top:0;z-index:20;height:var(--bar);background:rgba(10,12,16,.82);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
-.appbar .in{max-width:1180px;margin:0 auto;height:100%;padding:0 16px;display:flex;align-items:center;gap:18px}
+.appbar .in{max-width:1440px;margin:0 auto;height:100%;padding:0 16px;display:flex;align-items:center;gap:18px}
 .logo{display:flex;align-items:center;gap:10px;color:var(--text);flex:0 0 auto}
 .logo .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#7c5cff);display:grid;place-items:center;box-shadow:0 6px 18px rgba(77,141,255,.35)}
 .logo .mark svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
@@ -232,8 +232,8 @@ body.onboarding .topnav,body.onboarding .bar-right,body.onboarding .bottomnav{di
 .sync.busy i{background:var(--primary);animation:pulse 1s infinite}
 .sync.err{color:#fca5a5;border-color:rgba(248,113,113,.35)}.sync.err i{background:var(--bad)}
 .topnav{overflow:hidden}
-@media (max-width:1420px){.sync span{display:none}.sync{padding:9px}}
-@media (max-width:1420px) and (min-width:961px){.topnav a .l{display:none}.topnav a.on .l{display:inline}}
+@media (max-width:1180px){.sync span{display:none}.sync{padding:9px}}
+@media (max-width:1480px) and (min-width:961px){.topnav a .l{display:none}.topnav a.on .l{display:inline}}
 .banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:12px;border:1px solid rgba(251,191,36,.35);background:var(--warn-soft);margin-bottom:16px}
 .need{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
 .need:first-of-type{border-top:0;padding-top:0}
