@@ -202,6 +202,21 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .setrow select,.setrow input{padding:8px 10px}
 .setline{font-size:13px;color:#a8c7ff;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 @media (max-width:600px){.setrow{grid-template-columns:1fr;gap:4px}}
+.causes{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
+.counter .causes button{width:auto;height:auto;font-size:13px}
+.causes button{min-height:46px;border-radius:10px;border:1px solid var(--line2);background:var(--surface2);font-weight:600;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 12px;text-align:left}
+.causes button:hover{background:var(--surface3);border-color:var(--primary-line)}
+.causes button span{min-width:24px;height:24px;border-radius:7px;background:var(--bg);display:grid;place-items:center;font-size:12px;color:var(--muted)}
+.causes button span.n{color:#fca5a5;background:var(--bad-soft)}
+.chipsel{display:flex;gap:6px;flex-wrap:wrap}
+.chipsel button{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);color:var(--muted);font-weight:600;cursor:pointer}
+.chipsel button.on{background:var(--primary-soft);border-color:var(--primary-line);color:#cfe0ff}
+.gprog{display:flex;align-items:center;gap:10px;margin-top:8px}.gprog .meter{flex:1;margin:0}
+.goal.auto{cursor:default}
+.track.off{opacity:.5}
+.own{font-size:12px;color:var(--faint);background:none;border:0;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:2px}
+.levelup{border:1px solid rgba(52,211,153,.4);background:var(--good-soft);border-radius:14px;padding:16px 18px;margin-top:16px;display:flex;gap:12px;align-items:center;color:#bbf7d0}
+.cbar{display:grid;grid-template-columns:140px 1fr 32px;gap:10px;align-items:center;margin:9px 0;font-size:13px}
 .hist{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .hist+.hist{margin-top:8px}
 .hist .ico{width:42px;height:42px;border-radius:11px;background:var(--surface2);display:grid;place-items:center;color:var(--primary-h)}
@@ -317,6 +332,9 @@ const NAMES={TR:'Track Competence',CN:'Consistency',CC:'Car Control',PC:'Pace',S
 const COLORS={TR:'#7aa2ff',CN:'#a78bfa',CC:'#34d399',PC:'#fb923c',SA:'#38bdf8',RC:'#f472b6',CP:'#e5e7eb'};
 const TYPES={ai:'Course vs IA',pubf:'Public filtré',pubo:'Public ouvert',comp:'Competition Server',lfm:'LFM',league:'Ligue / championnat',hotlap:'Special Event',hotstint:'Hotstint',practice:'Entraînement solo'};
 const MULTI=['ai','pubf','pubo','comp','lfm','league'];
+const CAUSES={start:'Départ / tour 1',pass:'En dépassant',def:'En défendant',hit:'On m\'a percuté',other:'Autre'};
+const CAUSE_TIP={start:'Départ : laisse deux longueurs devant toi jusqu\'au deuxième virage',pass:'Dépasse seulement en ligne droite, ou avec la roue avant à hauteur avant le freinage',def:'Défense : une seule trajectoire, tu ne refermes jamais au freinage',hit:'Garde de la marge : ne reste pas dans l\'angle mort et laisse passer plus rapide que toi'};
+const MIN_DUR={ai:20,medals:15,pubf:40,se:15,cn:20,tel:30,comp:40,lfm:60};
 
 const IC={
  home:'<path d="M3 11 12 4l9 7v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
@@ -353,7 +371,7 @@ function normalize(){
   if(!S.profile)S.profile={name:'Victor'}; /* données v1 = profil de Victor */
   if(!S.medals)S.medals={};
   TRACKS.forEach(([t])=>{if(S.medals[t]==null)S.medals[t]=0});
-  S.checks=S.checks||{};S.sessions=S.sessions||[];S.target=S.target||9000;
+  S.checks=S.checks||{};S.sessions=S.sessions||[];S.target=S.target||9000;S.noTracks=S.noTracks||{};S.weekPick=S.weekPick||{};
   if(!Array.isArray(S.snapshots)||!S.snapshots.length)S.snapshots=[{ts:Date.now(),date:today(),...blankRatings()}];
   if(S.active===undefined)S.active=null;S.updatedAt=S.updatedAt||0;S.v=2;
 }
@@ -443,9 +461,15 @@ const prevSnap=()=>{const s=snaps();return s.length>1?s.at(-2):null};
 function saPoints(){const p=S.snapshots.map(s=>({ts:s.ts,date:s.date,v:s.SA}));S.sessions.forEach(s=>{if(typeof s.saAfter==='number')p.push({ts:s.ts,date:s.date,v:s.saAfter})});return p.sort((a,b)=>a.ts-b.ts)}
 function current(){const r={...lastSnap()};const p=saPoints().at(-1);if(p&&p.ts>r.ts){r.SA=p.v;r.saLive=true}return r}
 const medalsTotal=()=>Object.values(S.medals).reduce((a,b)=>a+b,0);
-const missingTracks=()=>TRACKS.map(([t])=>t).filter(t=>S.medals[t]<3).sort((a,b)=>S.medals[b]-S.medals[a]);
+const missingTracks=()=>TRACKS.map(([t])=>t).filter(t=>S.medals[t]<3&&!S.noTracks[t]).sort((a,b)=>S.medals[b]-S.medals[a]);
 const sessDesc=()=>[...S.sessions].sort((a,b)=>b.ts-a.ts);
 function cleanStreak(){let n=0;for(const s of sessDesc()){if(!MULTI.includes(s.type))continue;if(s.contacts===0)n++;else break}return n}
+function dateWeek(s){const[y,m,d]=String(s).split('-').map(Number);return weekKey(new Date(y,m-1,d))}
+const weekSess=()=>S.sessions.filter(s=>dateWeek(s.date)===weekKey());
+const todaySess=()=>S.sessions.filter(s=>s.date===today());
+function contactCauses(n=10){const L=sessDesc().filter(s=>MULTI.includes(s.type)&&Array.isArray(s.clog)).slice(0,n);const c={};let tot=0;L.forEach(s=>s.clog.forEach(k=>{c[k]=(c[k]||0)+1;tot++}));
+  const top=Object.entries(c).filter(([k])=>k!=='other').sort((a,b)=>b[1]-a[1])[0];return{c,tot,n:L.length,dom:top&&tot>=3&&top[1]/tot>=.4?top[0]:null,share:top&&tot?top[1]/tot:0}}
+function causeStreak(k){let n=0;for(const s of sessDesc()){if(!MULTI.includes(s.type)||!Array.isArray(s.clog))continue;if(s.clog.includes(k))break;n++}return n}
 function typeStats(){const g={};S.sessions.forEach(s=>{if(typeof s.saDelta!=='number')return;const o=g[s.type]=g[s.type]||{n:0,sum:0,c:0};o.n++;o.sum+=s.saDelta;o.c+=s.contacts||0});return Object.entries(g).map(([t,o])=>({type:t,n:o.n,avg:o.sum/o.n,c:o.c/o.n})).sort((a,b)=>b.avg-a.avg)}
 function saTrend(){const p=saPoints();if(p.length<2)return 0;const r=p.slice(-6);return r.at(-1).v-r[0].v}
 function phase(r){
@@ -463,7 +487,7 @@ function templates(){
   T.push({id:'ai',type:'ai',title:'Course contre l\'IA',dur:40,boosts:['SA','RC','CN'],
     score:(r.SA<65?100:r.SA<80?70:30)+(trend<0?15:0),
     why:r.SA<80?'Rouler près des autres sans contact construit ton Trust, donc ta Safety, sans risque de te faire sortir.':'Entretien du racecraft sans risque pour ta Safety.',
-    steps:['Tour 1 : tu suis, aucun dépassement','Dépasse seulement si ta roue avant est à hauteur avant la corde','Garde une voiture d\'écart dans les freinages','Compte chaque contact avec le bouton +','À l\'arrivée, note ta position finale']});
+    steps:['Tour 1 : tu suis, aucun dépassement','Dépasse seulement si ta roue avant est à hauteur avant la corde','Garde une voiture d\'écart dans les freinages','Chaque contact : touche la situation (départ, dépassement…)','À l\'arrivée, note ta position finale']});
   if(mt)T.push({id:'medals',type:'practice',track:mt,title:'Médailles · '+mt,dur:30,boosts:['TR','CN','CC'],
     score:ph.n<=2?75:45,why:`${S.medals[mt]}/3 médailles sur ${mt}. Chaque médaille monte ton Track Competence et t'ouvre plus de serveurs.`,
     steps:['Hotlap ou entraînement solo sur '+mt,'Tours propres, sans couper la piste','Régularité avant le chrono','Continue jusqu\'aux 3 médailles']});
@@ -487,6 +511,10 @@ function templates(){
     why:'L\'échelle de référence pour la suite : tes résultats LFM, c\'est ton CV.',
     steps:['Inscription à la course sur LFM','Même voiture que d\'habitude','Qualif propre','Course : finir dans ton split sans incident']});
   T.forEach(t=>{const s=st(t.type);if(s&&s.n>=2){t.score+=s.avg*6;t.personal=`Pour toi : ${sign(s.avg)} SA en moyenne sur ${s.n} sessions`}});
+  const tod=todaySess(),bud=S.profile.budget||0,cc=contactCauses();
+  T.forEach(t=>{const n=tod.filter(s=>s.tplId?s.tplId===t.id:s.type===t.type).length;if(n){t.score-=12*n;t.doneToday=n}
+    const md=MIN_DUR[t.id]||20;if(bud&&md>bud){t.score-=60;t.tooLong=true}else if(bud&&t.dur>bud)t.dur=bud;
+    if(cc.dom&&MULTI.includes(t.type))t.steps=[CAUSE_TIP[cc.dom],...t.steps.filter(x=>!(cc.dom==='start'&&x.startsWith('Tour 1')))]});
   T.forEach(t=>Object.assign(t,setupFor(t,r)));
   return T.sort((a,b)=>b.score-a.score);
 }
@@ -506,8 +534,8 @@ function aiStats(){
   return{n:L.length,c:last.length?last.reduce((a,s)=>a+(s.contacts||0),0)/last.length:0,lvl,lastD,lastP,avgGain:G.length?G.reduce((a,b)=>a+b,0)/G.length:null};
 }
 function familiarTrack(){
-  const full=TRACKS.map(([t])=>t).filter(t=>S.medals[t]===3);
-  const pool=full.length?full:TRACKS.map(([t])=>t).sort((a,b)=>S.medals[b]-S.medals[a]).slice(0,5);
+  const full=TRACKS.map(([t])=>t).filter(t=>S.medals[t]===3&&!S.noTracks[t]);
+  const pool=full.length?full:TRACKS.map(([t])=>t).filter(t=>!S.noTracks[t]).sort((a,b)=>S.medals[b]-S.medals[a]).slice(0,5);
   const lastUse=t=>{const s=sessDesc().find(x=>x.track===t);return s?s.ts:0};
   return pool.sort((a,b)=>lastUse(a)-lastUse(b))[0];
 }
@@ -522,7 +550,13 @@ function setupFor(t,r){
     else{grid=24;start=12;dur=30;reason=`Courses IA propres (${a.c.toFixed(1)} contact en moyenne) : grille pleine et départ au milieu. Plus de trafic, donc plus de Trust.`}
     if(a.c<.5&&a.avgGain!=null&&a.avgGain>=3){start=grid-2;reason+=` Tu remontes en moyenne de ${a.avgGain.toFixed(0)} places : départ plus loin pour travailler les dépassements propres.`}
     else if(a.avgGain!=null&&a.avgGain<=-2){start=Math.round(grid/2);reason+=` Tu perds en moyenne ${Math.abs(a.avgGain).toFixed(0)} places : départ au milieu et IA plus douce.`}
-    const aggr=r.SA<65?30:50,lp=a.lastP;
+    let aggrO=null;const cc=contactCauses();
+    if(cc.dom==='start'){start=grid;reason+=` ${Math.round(cc.share*100)} % de tes contacts arrivent au départ : départ en fond de grille.`}
+    else if(cc.dom==='hit'){aggrO=20;reason+=' Tu subis surtout les contacts : IA moins agressive et plus de marge.'}
+    else if(cc.dom==='pass')reason+=' La plupart de tes contacts arrivent en dépassant : la première consigne porte là-dessus.';
+    else if(cc.dom==='def')reason+=' Tes contacts arrivent surtout en défense : une seule trajectoire.';
+    const bud=S.profile.budget||0;if(bud&&dur>bud-10){dur=Math.max(10,bud-10);reason+=` Course raccourcie à ${dur} min pour tenir dans ton temps dispo.`}
+    const aggr=aggrO??(r.SA<65?30:50),lp=a.lastP;
     const iaNote=lp?(lp.start?`Dernière course : P${lp.start} → P${lp.finish} (${sign(lp.start-lp.finish)} places), `:`Dernière course : P${lp.finish} / ${lp.grid}, `)+(a.lastD>0?'IA renforcée':a.lastD<0?'IA adoucie':'IA inchangée'):`Note ton départ et ton arrivée à la fin : la force s'ajustera toute seule`;
     return{track:fam,trackFree:true,reason,setup:[['Mode','Course rapide (ou week-end sans qualif)'],['Circuit',fam,'Une piste que tu connais par cœur : toute ton attention va au trafic','track'],C,
       ['Grille',grid+' voitures'],['Départ','P'+start+' sur '+grid],
@@ -566,26 +600,34 @@ function bindNeeds(root){if(!root)return;const T=templates();root.querySelectorA
 
 /* ================= weekly goals ================= */
 function buildGoals(){
-  const r=current(),pv=prevSnap(),ph=phase(r),G=[];
+  const r=current(),pv=prevSnap(),ph=phase(r),G=[],W=weekSess(),wk=weekKey(),cnt=f=>W.filter(f).length;
   const recent=sessDesc().filter(s=>MULTI.includes(s.type)).slice(0,6);
   const avgC=recent.length?recent.reduce((a,s)=>a+(s.contacts||0),0)/recent.length:null;
-  const trend=saTrend(),ts=typeStats(),pubo=ts.find(x=>x.type==='pubo');
-  if(trend<0||(pv&&r.SA<pv.SA))G.push({id:'sa-stop',p:1,title:'Pause sur les serveurs publics ouverts',detail:'Uniquement IA ou serveurs avec Safety requise cette semaine.',why:`Ta Safety est en baisse (${sign(trend)} sur tes derniers points).`+(pubo&&pubo.avg<0?` Les serveurs ouverts te coûtent ${pubo.avg.toFixed(1)} SA par session.`:'')});
-  if(r.SA<80)G.push({id:'sa-ai',p:r.SA<65?1:2,title:`${r.SA<65?4:2} courses contre l'IA`,detail:'Grille pleine, milieu de peloton, zéro contact.',why:'Le moyen le plus sûr de reconstruire ton Trust.'});
-  if(r.SA>=50&&r.SA<80)G.push({id:'sa-filt',p:2,title:'Public : serveurs filtrés uniquement',detail:`Exigence Safety la plus proche de ${r.SA}.`,why:'Les lobbies peu filtrés causent la plupart des contacts non fautifs.'});
-  if(avgC!==null&&avgC>=.5)G.push({id:'zero',p:1,title:`3 sessions de suite à 0 contact (${cleanStreak()}/3)`,detail:'Tour 1 en mode suivi, dépassements seulement avec la roue à hauteur.',why:`${avgC.toFixed(1)} contact(s) par course en moyenne récemment.`});
-  const miss=missingTracks();if(miss.length){const pk=miss.slice(0,3);G.push({id:'medals-'+pk.join('|'),p:ph.n<=2?2:3,title:'Médailles : '+pk.join(', '),detail:'Tours propres jusqu\'aux 3 médailles par piste.',why:`${medalsTotal()}/75 médailles.`})}
-  if(r.PC<60)G.push({id:'pace-se',p:ph.n>=3?1:3,title:'Special Event de la semaine',detail:'Hotlap et Superpole, plusieurs runs.',why:`Pace à ${r.PC}.`});
-  if(r.SA>=80)G.push({id:'comp',p:1,title:'1 Competition Server par jour',detail:'Sur une piste où tu as 3 médailles.',why:`Competition à ${r.CP}.`});
-  if(r.SA>=70)G.push({id:'lfm',p:ph.n>=3?1:3,title:'2 courses LFM',detail:'Même voiture, finir propre.',why:'Ton classement LFM compte pour la suite.'});
-  if(pv&&(r.CN<pv.CN||r.CC<pv.CC))G.push({id:'cncc',p:2,title:'Session régularité',detail:'15 tours dans 0,5 s.',why:'Consistency ou Car Control en baisse.'});
+  const trend=saTrend(),ts=typeStats(),pubo=ts.find(x=>x.type==='pubo'),cc=contactCauses();
+  const pubW=cnt(s=>s.type==='pubo');
+  if(trend<0||(pv&&r.SA<pv.SA))G.push({id:'sa-stop',p:1,title:'Aucun serveur public ouvert cette semaine',detail:'Uniquement IA ou serveurs avec Safety requise.',why:`Ta Safety est en baisse (${sign(trend)} sur tes derniers points).`+(pubo&&pubo.avg<0?` Les serveurs ouverts te coûtent ${pubo.avg.toFixed(1)} SA par session.`:''),rule:true,broken:pubW>0});
+  else if(r.SA>=50&&r.SA<80)G.push({id:'sa-filt',p:2,title:'En public : serveurs filtrés uniquement',detail:`Exigence Safety la plus proche de ${r.SA}.`,why:'Les lobbies peu filtrés causent la plupart des contacts non fautifs.',rule:true,broken:pubW>0});
+  if(r.SA<80){const n=r.SA<65?4:2;G.push({id:'sa-ai',p:r.SA<65?1:2,title:`${n} courses contre l'IA`,detail:'Avec les réglages de la page Préparer.',why:'Le moyen le plus sûr de reconstruire ton Trust.',prog:cnt(s=>s.type==='ai'),n})}
+  if(cc.dom)G.push({id:'cause-'+cc.dom,p:1,title:`3 courses sans contact « ${CAUSES[cc.dom].toLowerCase()} »`,detail:CAUSE_TIP[cc.dom]+'.',why:`${Math.round(cc.share*100)} % de tes ${cc.tot} derniers contacts arrivent dans cette situation.`,prog:Math.min(3,causeStreak(cc.dom)),n:3});
+  else if(avgC!==null&&avgC>=.5)G.push({id:'zero',p:1,title:'3 courses de suite à 0 contact',detail:'Tour 1 en mode suivi, dépassements seulement avec la roue à hauteur.',why:`${avgC.toFixed(1)} contact(s) par course en moyenne récemment.`,prog:Math.min(3,cleanStreak()),n:3});
+  if(!S.weekPick[wk])S.weekPick[wk]=missingTracks().slice(0,3);
+  const pk=S.weekPick[wk].filter(t=>!S.noTracks[t]);
+  if(pk.length)G.push({id:'medals',p:ph.n<=2?2:3,title:'Médailles : '+pk.join(', '),detail:'Les 3 médailles sur chaque piste.',why:`${medalsTotal()}/75 médailles au total.`,prog:pk.filter(t=>S.medals[t]===3).length,n:pk.length});
+  if(r.PC<60)G.push({id:'pace-se',p:ph.n>=3?1:3,title:'Special Event de la semaine',detail:'Hotlap et Superpole, plusieurs runs.',why:`Pace à ${r.PC}.`,prog:cnt(s=>s.type==='hotlap'),n:1});
+  if(r.SA>=80)G.push({id:'comp',p:1,title:'5 courses en Competition Server',detail:'Sur des pistes où tu as 3 médailles.',why:`Competition à ${r.CP}.`,prog:cnt(s=>s.type==='comp'),n:5});
+  if(r.SA>=70)G.push({id:'lfm',p:ph.n>=3?1:3,title:'2 courses LFM',detail:'Même voiture, finir propre.',why:'Ton classement LFM compte pour la suite.',prog:cnt(s=>s.type==='lfm'),n:2});
+  if(pv&&(r.CN<pv.CN||r.CC<pv.CC))G.push({id:'cncc',p:2,title:'Une session régularité',detail:'15 tours dans 0,5 s.',why:'Consistency ou Car Control en baisse.',prog:cnt(s=>s.tplId==='cn'),n:1});
   if(ph.n===4)G.push({id:'league',p:1,title:'Inscris-toi à un championnat',detail:'The SimGrid ou une ligue.',why:'C\'est là que les équipes recrutent.'});
-  G.push({id:'log',p:3,title:'Enregistrer chaque session',detail:'Avec ta Safety après la session.',why:'C\'est ce qui permet à l\'app de s\'adapter à toi.'});
+  G.push({id:'log',p:3,title:'Safety notée après chaque session',detail:'Dans l\'écran de fin de session.',why:'C\'est ce qui permet à l\'app de s\'adapter à toi.',prog:W.filter(s=>typeof s.saAfter==='number').length,n:Math.max(1,W.length)});
   return{ph,goals:G.sort((a,b)=>a.p-b.p)};
 }
+function goalOk(g){if(g.n!=null)return g.prog>=g.n;if(g.rule)return!g.broken;return!!(S.checks[weekKey()]||{})[g.id]}
 function toggleGoal(id){const wk=weekKey();const c=S.checks[wk]=S.checks[wk]||{};c[id]=!c[id];save()}
-function goalHTML(g,mini){const c=(S.checks[weekKey()]||{})[g.id];const pl={1:['p1','Priorité'],2:['p2','Important'],3:['p3','Bonus']}[g.p];
-  return`<div class="goal ${mini?'mini':''} ${c?'done':''}" data-goal="${esc(g.id)}" role="checkbox" aria-checked="${!!c}" tabindex="0"><span class="box"></span><div><h3><span class="tag ${pl[0]}">${pl[1]}</span>${esc(g.title)}</h3>${mini?'':`<p style="margin-top:4px">${esc(g.detail)}</p><p class="why">${esc(g.why)}</p>`}</div></div>`}
+function goalHTML(g,mini){const pl={1:['p1','Priorité'],2:['p2','Important'],3:['p3','Bonus']}[g.p];
+  const auto=g.n!=null,man=!auto&&!g.rule,done=auto?g.prog>=g.n:man&&goalOk(g);
+  const status=auto?`<div class="gprog"><div class="meter"><i style="width:${Math.min(100,g.prog/g.n*100)}%;background:${done?'var(--good)':'var(--primary)'}"></i></div><b class="small">${Math.min(g.prog,g.n)} / ${g.n}</b></div>`
+    :g.rule?`<p class="small ${g.broken?'down':'up'}" style="margin-top:6px;font-weight:600">${g.broken?'Pas respecté cette semaine':'Respecté pour l\'instant'}</p>`:'';
+  return`<div class="goal ${mini?'mini':''} ${done?'done':''} ${man?'':'auto'}" ${man?`data-goal="${esc(g.id)}" role="checkbox" aria-checked="${done}" tabindex="0"`:''}><span class="box" ${g.rule?`style="border-color:${g.broken?'var(--bad)':'var(--good)'}"`:''}></span><div style="flex:1;min-width:0"><h3><span class="tag ${pl[0]}">${pl[1]}</span>${esc(g.title)}</h3>${mini?status:`<p style="margin-top:4px">${esc(g.detail)}</p><p class="why">${esc(g.why)}</p>${status}`}</div></div>`}
 function bindGoals(root,rerender){root.querySelectorAll('[data-goal]').forEach(el=>{const f=()=>{toggleGoal(el.dataset.goal);rerender()};el.onclick=f;el.onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();f()}}})}
 
 /* ================= nav / router ================= */
@@ -612,9 +654,11 @@ function go(p){if(location.hash==='#/'+p)route();else location.hash='#/'+p}
 function updateBar(){if(!S)return;const a=S.active&&S.active.stage==='run';$('#livePill').classList.toggle('on',!!a);$('#startTop').style.display=S.active?'none':'';tick()}
 
 /* ================= timer (1 update/s, paused when tab hidden) ================= */
-function tick(){if(!S||!S.active||!S.active.startedAt||document.hidden)return;const t=fmtTime(Date.now()-S.active.startedAt);$$('[data-timer]').forEach(e=>e.textContent=t)}
+function tick(){if(!S||!S.active||!S.active.startedAt||S.active.stage!=='run'){if(document.title!=='ACC 9000')document.title='ACC 9000';return}
+  const t=fmtTime(Date.now()-S.active.startedAt);document.title='⏱ '+t+' · ACC 9000';if(document.hidden)return;$$('[data-timer]').forEach(e=>e.textContent=t)}
 setInterval(()=>{if(S&&S.active&&S.active.stage==='run')tick()},1000);
-document.addEventListener('visibilitychange',tick);
+document.addEventListener('visibilitychange',()=>{tick();if(document.hidden&&gh&&syncState.k==='pending'){clearTimeout(sy.timer);ghPush()}});
+window.addEventListener('storage',e=>{if(e.key!==STORE)return;try{S=e.newValue?JSON.parse(e.newValue):null;if(S)normalize();route()}catch(_){}});
 
 /* ================= HOME ================= */
 function renderHome(){
@@ -625,7 +669,8 @@ function renderHome(){
       <div class="actions"><a class="btn btn-primary btn-lg" href="#/session">${ico('play')}Reprendre</a></div></div>`
     :`<div class="hero"><svg class="bg" viewBox="0 0 24 24">${IC.route}</svg><div class="eyebrow">Session recommandée maintenant</div><h2>${esc(rec.title)}</h2><p>${esc(rec.why)}</p>
       <div class="row" style="margin-top:14px">${chips(rec.boosts)}<span class="chip">${ico('clock')}~${rec.dur} min</span></div>${setupLine(rec.setup)?`<p class="setline" style="margin-top:12px">${ico('route')}${esc(setupLine(rec.setup))}</p>`:''}
-      <div class="actions"><button class="btn btn-primary btn-lg" id="heroStart">${ico('play')}Démarrer cette session</button><a class="btn btn-secondary btn-lg" href="#/session">Choisir une autre session</a><button class="btn btn-ghost btn-lg" id="heroReg">${ico('edit')}Enregistrer une session passée</button></div></div>`;
+      <div class="actions"><button class="btn btn-primary btn-lg" id="heroStart">${ico('play')}Démarrer cette session</button><a class="btn btn-secondary btn-lg" href="#/session">Choisir une autre session</a><button class="btn btn-ghost btn-lg" id="heroReg">${ico('edit')}Enregistrer une session passée</button></div>
+      <div class="row" style="margin-top:16px"><span class="small muted">Temps dispo :</span>${budgetHTML()}</div></div>`;
   const delta=k=>{if(!pv)return'';const d=r[k]-pv[k];return d?`<span class="${d>0?'up':'down'}">${sign(d)}</span> depuis le dernier relevé`:'stable'};
   const saCol=r.SA<65?'var(--bad)':r.SA<80?'var(--warn)':'var(--good)';
   const last=sessDesc().slice(0,3);
@@ -640,11 +685,11 @@ function renderHome(){
      <div class="card kpi"><div class="l">${ico('flag')}Projection ${S.target.toLocaleString('fr-FR')}</div><div class="v num" style="font-size:30px;margin-top:10px">${pr?(pr.done?'Atteint':pr.date.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})):'—'}</div><div class="d">${pr?'≈ '+pr.rate.toFixed(1)+' points par jour':'Disponible après ton 2e relevé'}</div></div>
    </div>
    <div class="grid g2" style="margin-top:16px">
-     <div class="card"><div class="card-h"><h2>${ico('target')}Cette semaine</h2><a class="btn btn-ghost btn-sm" href="#/goals">Tout voir</a></div><div id="homeGoals">${goals.slice(0,4).map(g=>goalHTML(g,true)).join('')}</div></div>
+     <div class="card"><div class="card-h"><div><h2>${ico('target')}Cette semaine</h2><p class="small muted" style="margin-top:2px">${(()=>{const W=weekSess(),m=W.reduce((x,s)=>x+(s.dur||0),0);return W.length+' session'+(W.length>1?'s':'')+' · '+m+' min de roulage'})()}</p></div><a class="btn btn-ghost btn-sm" href="#/goals">Tout voir</a></div><div id="homeGoals">${goals.slice(0,4).map(g=>goalHTML(g,true)).join('')}</div></div>
      <div class="card"><div class="card-h"><h2>${ico('clock')}Dernières sessions</h2><a class="btn btn-ghost btn-sm" href="#/history">Historique</a></div>
        ${last.length?last.map(histHTML).join(''):`<div class="empty"><div class="ic">${ico('play')}</div>Aucune session pour l'instant.<br>Lance ta première avec le bouton Démarrer.</div>`}</div>
    </div>`;
-  if(!a){$('#heroStart').onclick=()=>startSession(rec);$('#heroReg').onclick=startRegister}
+  if(!a){$('#heroStart').onclick=()=>startSession(rec);$('#heroReg').onclick=startRegister;bindBudget($('#page-home .hero'),renderHome)}
   bindNeeds($('#needs'));
   bindGoals($('#homeGoals'),renderHome);bindHist($('#page-home'));
 }
@@ -659,6 +704,8 @@ function startSession(t){
 }
 function launchTimer(){const a=S.active;a.stage='run';a.startedAt=Date.now();save();renderSession();updateBar();window.scrollTo(0,0);toast('Chrono lancé, bonne session')}
 function startRegister(){S.active={stage:'finish',mode:'register',title:'Session enregistrée',type:'ai',track:lastTrack(),boosts:[],steps:[],startedAt:null,contacts:0,offs:0,notes:''};summary=null;save();go('session')}
+function budgetHTML(){return`<div class="chipsel">${[[0,'Pas de limite'],[20,'20 min'],[45,'45 min'],[90,'1 h 30']].map(([v,l])=>`<button type="button" data-b="${v}" class="${(S.profile.budget||0)===v?'on':''}">${l}</button>`).join('')}</div>`}
+function bindBudget(root,rerender){root.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{S.profile.budget=+b.dataset.b;save();rerender()})}
 function lastTrack(){const s=sessDesc()[0];return s?s.track:missingTracks()[0]||TRACKS[0][0]}
 const opt=(obj,sel)=>Object.entries(obj).map(([k,v])=>`<option value="${k}" ${k===sel?'selected':''}>${v}</option>`).join('');
 const trackOpts=sel=>TRACKS.map(([t])=>`<option ${t===sel?'selected':''}>${esc(t)}</option>`).join('');
@@ -689,7 +736,7 @@ function renderPrep(el){
        <div class="card"><div class="card-h"><h2>${ico('flag')}Les consignes</h2><span class="small muted">${a.steps.length} étapes</span></div>
          ${a.steps.length?`<ol class="howto">${a.steps.map(s=>`<li>${esc(s.t)}</li>`).join('')}</ol>`:'<p class="muted">Pas de consigne : roule et note ce qui se passe.</p>'}</div>
        <button class="btn btn-primary btn-lg btn-block" id="goTimer">${ico('play')}C'est réglé, lancer le chrono</button>
-       <div class="row"><button class="btn btn-ghost" id="prepBack">${ico('back')}Changer de session</button></div>
+       <div class="row"><button class="btn btn-ghost" id="prepBack">${ico('back')}Changer de session</button>${a.tplId==='medals'?`<button class="btn btn-ghost" id="noDlc">Je n'ai pas ce circuit</button>`:''}</div>
      </div></div>`;
   el.querySelectorAll('[data-kind]').forEach(inp=>inp.onchange=()=>{const i=inp.dataset.setup;
     if(inp.dataset.kind==='track'){a.track=inp.value;if(i!=null)a.setup[i][1]=inp.value}
@@ -697,17 +744,18 @@ function renderPrep(el){
     save()});
   $('#goTimer').onclick=launchTimer;
   $('#prepBack').onclick=()=>{S.active=null;save();updateBar();renderSession()};
+  const nd=$('#noDlc');if(nd)nd.onclick=()=>{S.noTracks[a.track]=true;S.active=null;save();updateBar();toast(a.track+' retiré de tes pistes');renderSession()};
 }
 function renderPicker(el){
   const T=templates(),rec=T.slice(0,3),other=T.slice(3);
   const card=(t,i,isRec)=>`<div class="tpl ${isRec?'rec':''}">
-     <div class="top"><div><h3>${esc(t.title)}</h3><p class="small muted" style="margin-top:2px">${TYPES[t.type]} · ~${t.dur} min</p></div>${isRec?`<span class="tag ${i===0?'best':'p2'}">${i===0?'Meilleur choix':'Recommandé'}</span>`:''}</div>
+     <div class="top"><div><h3>${esc(t.title)}</h3><p class="small muted" style="margin-top:2px">${TYPES[t.type]} · ~${t.dur} min${t.doneToday?` · déjà ${t.doneToday}× aujourd'hui`:''}</p></div>${t.tooLong?'<span class="tag p3">Trop long</span>':isRec?`<span class="tag ${i===0?'best':'p2'}">${i===0?'Meilleur choix':'Recommandé'}</span>`:''}</div>
      <p class="why">${esc(t.why)}</p>
      ${setupLine(t.setup)?`<p class="setline">${ico('route')}${esc(setupLine(t.setup))}</p>`:''}
      <div><p class="small faint" style="margin-bottom:6px">Fait progresser</p><div class="meta">${chips(t.boosts)}</div></div>
      ${t.personal?`<p class="pers">${esc(t.personal)}</p>`:''}
      <button class="btn ${isRec&&i===0?'btn-primary':'btn-secondary'} btn-block" data-start="${t.id}">${ico('play')}Démarrer</button></div>`;
-  el.innerHTML=`${stepper(1)}<div class="phead"><div><h1>Nouvelle session</h1><p>Choisis ce que tu vas faire. Les recommandations s'adaptent à tes stats et à ton historique.</p></div></div>
+  el.innerHTML=`${stepper(1)}<div class="phead"><div><h1>Nouvelle session</h1><p>Choisis ce que tu vas faire. Les recommandations s'adaptent à tes stats, à ton historique et à ton temps dispo.</p></div><div class="stack" style="gap:6px"><span class="small muted">Temps dispo</span>${budgetHTML()}</div></div>
    <div class="sectiont">Recommandées pour toi</div>
    <div class="grid g3">${rec.map((t,i)=>card(t,i,true)).join('')}</div>
    <div class="sectiont">Autres options</div>
@@ -724,6 +772,7 @@ function renderPicker(el){
      </div></div>
    ${other.length?`<div class="grid g3" style="margin-top:16px">${other.map((t,i)=>card(t,i,false)).join('')}</div>`:''}`;
   el.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>startSession(T.find(t=>t.id===b.dataset.start)));
+  bindBudget(el,()=>renderPicker(el));
   $('#regBtn').onclick=startRegister;
   $('#custBtn').onclick=()=>{$('#custForm').style.display='';$('#cGoal').focus()};
   $('#cCancel').onclick=()=>$('#custForm').style.display='none';
@@ -742,7 +791,8 @@ function renderRun(el){
      <div class="stack">
        <div class="card"><h2 style="margin-bottom:12px">${ico('shield')} Pendant la session</h2>
          <div class="stack" style="gap:10px">
-           <div class="counter"><div><b>Contacts</b><div class="small muted">Avec une autre voiture</div></div><div class="ctl"><button data-cnt="contacts" data-d="-1" aria-label="Moins">−</button><span class="v num" id="v-contacts">${a.contacts}</span><button data-cnt="contacts" data-d="1" aria-label="Plus">+</button></div></div>
+           <div class="counter" style="display:block"><div class="spread"><div><b>Contacts</b><div class="small muted">Touche la situation : ça affine tes prochaines sessions</div></div><div class="ctl"><button data-undo aria-label="Retirer le dernier contact">−</button><span class="v num" id="v-contacts">${a.contacts}</span></div></div>
+             <div class="causes">${Object.entries(CAUSES).map(([k,l])=>{const n=(a.clog||[]).filter(x=>x===k).length;return`<button type="button" data-cause="${k}">+ ${l}<span class="${n?'n':''}">${n}</span></button>`}).join('')}</div></div>
            <div class="counter"><div><b>Sorties de piste</b><div class="small muted">Track limits, tête-à-queue</div></div><div class="ctl"><button data-cnt="offs" data-d="-1" aria-label="Moins">−</button><span class="v num" id="v-offs">${a.offs}</span><button data-cnt="offs" data-d="1" aria-label="Plus">+</button></div></div>
            <div><label class="f">Circuit</label><select id="rTrack">${trackOpts(a.track)}</select></div>
            <div><label class="f">Notes rapides</label><textarea id="rNotes" rows="3" placeholder="ex. contact T1 tour 1, freinage trop tard à la chicane">${esc(a.notes)}</textarea></div>
@@ -753,6 +803,8 @@ function renderRun(el){
   const upd=()=>{const d=a.steps.filter(s=>s.done).length;const sc=$('#stepCount');if(sc)sc.textContent=a.steps.length?d+' / '+a.steps.length:''};upd();
   el.querySelectorAll('[data-step]').forEach(s=>s.onclick=()=>{const st=a.steps[+s.dataset.step];st.done=!st.done;s.classList.toggle('done',st.done);save();upd()});
   el.querySelectorAll('[data-cnt]').forEach(b=>b.onclick=()=>{const k=b.dataset.cnt;a[k]=Math.max(0,a[k]+ +b.dataset.d);$('#v-'+k).textContent=a[k];save()});
+  el.querySelectorAll('[data-cause]').forEach(b=>b.onclick=()=>{a.clog=a.clog||[];a.clog.push(b.dataset.cause);a.contacts++;a.notes=$('#rNotes').value;save();renderRun(el)});
+  const ub=el.querySelector('[data-undo]');if(ub)ub.onclick=()=>{a.clog=a.clog||[];if(a.clog.length)a.clog.pop();a.contacts=Math.max(0,a.contacts-1);a.notes=$('#rNotes').value;save();renderRun(el)};
   $('#rTrack').onchange=e=>{a.track=e.target.value;save()};
   let nt;$('#rNotes').oninput=e=>{a.notes=e.target.value;clearTimeout(nt);nt=setTimeout(save,400)};
   $('#finishBtn').onclick=()=>{a.notes=$('#rNotes').value;a.stage='finish';a.endedAt=Date.now();save();renderSession();updateBar();window.scrollTo(0,0)};
@@ -785,10 +837,9 @@ function renderFinish(el){
        </div></div>
      <div class="stack">
        <div class="card"><h2 style="margin-bottom:6px">Ta Safety après la session</h2><p class="small muted" style="margin-bottom:14px">Driver Profile, Rating. C'est la donnée la plus utile : elle permet à l'app de savoir ce qui te fait progresser.</p>
-         <div class="highlight"><label class="f">Safety (SA)</label><input type="number" id="fSA" min="0" max="99" placeholder="actuellement ${r.SA}" style="font-size:22px;font-weight:700"></div>
+         <div class="highlight"><div class="form" style="grid-template-columns:1fr 1fr"><div><label class="f">Safety (SA)</label><input type="number" id="fSA" min="0" max="99" placeholder="actuellement ${r.SA}" style="font-size:22px;font-weight:700"></div><div><label class="f">Total points</label><input type="number" id="fTO" min="0" placeholder="actuellement ${r.TO}" style="font-size:22px;font-weight:700"></div></div><p class="hint" style="margin-top:8px">Le total alimente ta projection vers ${S.target.toLocaleString('fr-FR')}.</p></div>
          <label class="switch" style="margin-top:16px"><input type="checkbox" id="fAll"><span class="t"></span>Mettre à jour tous mes ratings</label>
          <div id="allBox" style="display:none;margin-top:14px"><div class="form">
-           <div><label class="f">Total points</label><input type="number" id="r-TO" value="${r.TO}"></div>
            ${KEYS.filter(k=>k!=='SA').map(k=>`<div><label class="f">${NAMES[k]}</label><input type="number" id="r-${k}" min="0" max="99" value="${r[k]}"></div>`).join('')}
          </div><p class="hint">Conseillé 1 à 2 fois par semaine : ça alimente les graphiques et la projection.</p></div>
        </div>
@@ -811,21 +862,24 @@ function finishSession(){
   const s={ts:Date.now(),date:a.mode==='register'?($('#fDate').value||today()):today(),title:a.title,type:$('#fType').value,track,
     dur:num('#fDur')||0,contacts:num('#fContacts')||0,offs:num('#fOffs')||0,result:$('#fResult').value.trim(),
     feel:+($('#fFeel .on')||{}).dataset?.v||3,notes:$('#fNotes').value.trim(),boosts:a.boosts,
-    stepsDone:a.steps.filter(x=>x.done).length,stepsTotal:a.steps.length,setup:a.setup||[]};
+    stepsDone:a.steps.filter(x=>x.done).length,stepsTotal:a.steps.length,setup:a.setup||[],tplId:a.tplId||null,clog:(a.clog||[]).slice(0,Math.max(0,num('#fContacts')??99))};
   if(MULTI.includes(s.type)){const st=num('#fStart'),fi=num('#fFinish'),gr=num('#fGrid');if(fi){s.finish=fi;if(st)s.start=st;if(gr)s.grid=gr;s.result=`P${fi}${gr?' / '+gr:''}`}else s.result=''}
   if(sa!==null){s.saAfter=sa;s.saDelta=sa-before.SA}
   S.sessions.push(s);
   const m=+(($('#fMedals .on')||{}).dataset?.v??S.medals[track]),mGain=m-S.medals[track];S.medals[track]=m;
-  if($('#fAll').checked){const snap={ts:s.ts+1,date:s.date,TO:num('#r-TO')??before.TO,TOT:lastSnap().TOT??null,SA:sa??before.SA};KEYS.filter(k=>k!=='SA').forEach(k=>snap[k]=num('#r-'+k)??before[k]);S.snapshots.push(snap)}
-  summary={s,mGain,before};S.active=null;save();updateBar();renderSession();window.scrollTo(0,0);toast('Session enregistrée');
+  const to=num('#fTO'),all=$('#fAll').checked;
+  if(all||to!==null){const snap={ts:s.ts+1,date:s.date,TO:to??before.TO,TOT:lastSnap().TOT??null,SA:sa??before.SA};KEYS.filter(k=>k!=='SA').forEach(k=>snap[k]=all?(num('#r-'+k)??before[k]):before[k]);S.snapshots.push(snap)}
+  summary={s,mGain,before,phBefore:phase(before).n,toDelta:to!==null?to-before.TO:null};S.active=null;save();updateBar();renderSession();window.scrollTo(0,0);toast('Session enregistrée');
 }
 function renderSummary(el){
-  const {s,mGain}=summary,next=templates()[0];
+  const {s,mGain,phBefore,toDelta}=summary,next=templates()[0],phNow=phase(current());
+  const topCause=(()=>{const c={};(s.clog||[]).forEach(k=>c[k]=(c[k]||0)+1);const t=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];return t?CAUSES[t[0]].toLowerCase():''})();
   const d=typeof s.saDelta==='number'?s.saDelta:null;
-  el.innerHTML=`<div class="hero" style="text-align:center"><div class="eyebrow">Session enregistrée</div><h2>${esc(s.title)}</h2><p style="margin:0 auto">${esc(TYPES[s.type])} · ${esc(s.track)} · ${s.dur} min</p></div>
+  el.innerHTML=`<div class="hero" style="text-align:center"><div class="eyebrow">Session enregistrée</div><h2>${esc(s.title)}</h2><p style="margin:0 auto">${esc(TYPES[s.type])} · ${esc(s.track)} · ${s.dur} min${toDelta!=null?` · total ${sign(toDelta)} points`:''}</p></div>
+   ${phNow.n>phBefore?`<div class="levelup">${ico('trophy')}<div><b>Phase ${phNow.n} débloquée : ${esc(phNow.name)}</b><p class="small" style="margin-top:2px">${esc(phNow.goal)} Tes recommandations changent dès maintenant.</p></div></div>`:''}
    <div class="grid g4" style="margin-top:16px">
      <div class="card kpi"><div class="l">Safety</div><div class="v num ${d==null?'':d>0?'up':d<0?'down':'flat'}">${d==null?'—':sign(d)}</div><div class="d">${s.saAfter!=null?'Maintenant à '+s.saAfter:'Non renseignée'}</div></div>
-     <div class="card kpi"><div class="l">Contacts</div><div class="v num ${s.contacts?'down':'up'}">${s.contacts}</div><div class="d">${s.contacts?'À réduire la prochaine fois':'Session propre'}</div></div>
+     <div class="card kpi"><div class="l">Contacts</div><div class="v num ${s.contacts?'down':'up'}">${s.contacts}</div><div class="d">${s.contacts?(topCause?'Surtout : '+esc(topCause):'À réduire la prochaine fois'):'Session propre'}</div></div>
      <div class="card kpi"><div class="l">Médailles</div><div class="v num ${mGain>0?'up':''}">${mGain>0?'+'+mGain:'='}</div><div class="d">${medalsTotal()} / 75 au total</div></div>
      ${s.finish&&s.start?`<div class="card kpi"><div class="l">Places</div><div class="v num ${s.start-s.finish>0?'up':s.start-s.finish<0?'down':'flat'}">${sign(s.start-s.finish)}</div><div class="d">P${s.start} → P${s.finish}${s.grid?' sur '+s.grid:''}</div></div>`
       :`<div class="card kpi"><div class="l">Étapes</div><div class="v num">${s.stepsTotal?s.stepsDone+'<small> / '+s.stepsTotal+'</small>':'—'}</div><div class="d">consignes cochées</div></div>`}
@@ -838,8 +892,8 @@ function renderSummary(el){
 
 /* ================= GOALS ================= */
 function renderGoals(){
-  const {goals,ph}=buildGoals(),wk=weekKey(),c=S.checks[wk]||{},done=goals.filter(g=>c[g.id]).length;
-  $('#page-goals').innerHTML=`<div class="phead"><div><h1>Objectifs de la semaine</h1><p>Recalculés après chaque session. Coche au fur et à mesure.</p></div>
+  const {goals,ph}=buildGoals(),wk=weekKey(),done=goals.filter(goalOk).length;
+  $('#page-goals').innerHTML=`<div class="phead"><div><h1>Objectifs de la semaine</h1><p>Ils avancent tout seuls avec les sessions que tu enregistres.</p></div>
    <div class="card pad-s" style="min-width:220px"><div class="spread"><span class="small muted">Semaine ${wk.split('-W')[1]}</span><b class="num" style="font-size:22px">${done} / ${goals.length}</b></div><div class="meter"><i style="width:${goals.length?done/goals.length*100:0}%;background:var(--good)"></i></div></div></div>
    <div class="card pad-s" style="margin-bottom:16px"><div class="spread"><div><span class="tag phase">Phase ${ph.n} sur 4</span> <b style="margin-left:6px">${esc(ph.name)}</b></div><span class="small muted">${ph.exit.label} : ${ph.exit.val} / ${ph.exit.max}</span></div><div class="meter"><i style="width:${Math.min(100,ph.exit.val/ph.exit.max*100)}%"></i></div></div>
    <div id="goalList">${goals.map(g=>goalHTML(g)).join('')}</div>`;
@@ -850,7 +904,7 @@ function renderGoals(){
 let charts={},chartLoading=false;
 function withChart(cb){if(window.Chart)return cb();if(chartLoading)return;chartLoading=true;const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';s.onload=()=>{chartLoading=false;if(page==='progress')cb()};document.head.appendChild(s)}
 function renderProgress(){
-  const r=current(),pv=prevSnap(),ts=typeStats(),pr=projection();
+  const r=current(),pv=prevSnap(),ts=typeStats(),pr=projection(),cc=contactCauses();
   $('#page-progress').innerHTML=`<div class="phead"><div><h1>Progression</h1><p>Tes ratings, ta Safety dans le temps et ce qui la fait bouger.</p></div><button class="btn btn-secondary" id="newSnap">${ico('plus')}Nouveau relevé</button></div>
    <div class="card" id="snapCard" style="display:none;margin-bottom:16px"><h2 style="margin-bottom:14px">Nouveau relevé de ratings</h2><div class="form">
      <div><label class="f">Date</label><input type="date" id="s-date" value="${today()}"></div><div><label class="f">Total points</label><input type="number" id="s-TO" value="${r.TO}"></div>
@@ -866,6 +920,9 @@ function renderProgress(){
      <div class="card"><div class="card-h"><h2>Ce qui fait bouger ta Safety</h2></div>
        ${ts.length?`<table><tr><th>Type</th><th>Sessions</th><th>Δ SA moyen</th><th>Contacts</th></tr>${ts.map(x=>`<tr><td>${TYPES[x.type]}</td><td>${x.n}</td><td class="${x.avg>0?'up':x.avg<0?'down':'flat'}"><b>${sign(x.avg)}</b></td><td>${x.c.toFixed(1)}</td></tr>`).join('')}</table>`
        :`<div class="empty"><div class="ic">${ico('shield')}</div>Renseigne ta Safety à la fin de chaque session : ce tableau montrera ce qui la fait monter ou baisser.</div>`}</div>
+     <div class="card"><div class="card-h"><h2>D'où viennent tes contacts</h2><span class="small muted">${cc.n} dernière${cc.n>1?'s':''} course${cc.n>1?'s':''}</span></div>
+       ${cc.tot?Object.entries(CAUSES).map(([k,l])=>{const n=cc.c[k]||0;return`<div class="cbar"><span>${l}</span><div class="meter" style="margin:0"><i style="width:${n/cc.tot*100}%;background:${k===cc.dom?'var(--bad)':'var(--primary)'}"></i></div><b>${n}</b></div>`}).join('')+(cc.dom?`<div class="highlight" style="margin-top:12px"><p class="small"><b>Point à travailler : ${esc(CAUSES[cc.dom].toLowerCase())}</b></p><p class="small" style="margin-top:4px;color:#c6cfdd">${esc(CAUSE_TIP[cc.dom])}. Tes sessions et objectifs sont réglés là-dessus.</p></div>`:'')
+       :`<div class="empty"><div class="ic">${ico('users')}</div>Pendant tes courses, touche la situation de chaque contact (départ, dépassement…). Ici, tu verras d'où ils viennent.</div>`}</div>
    </div>`;
   bindNeeds($('#needsAll'));
   $('#newSnap').onclick=()=>{$('#snapCard').style.display=''};
@@ -908,12 +965,14 @@ function renderHistory(){
 /* ================= MEDALS ================= */
 function renderMedals(){
   const tot=medalsTotal(),done=TRACKS.filter(([t])=>S.medals[t]===3).length;
-  const tile=([t])=>{const m=S.medals[t];return`<div class="track ${m===3?'full':''}"><span><b>${esc(t)}</b><span class="small muted" style="display:block">${m===3?'Complet':m+' / 3'}</span></span><span class="stars">${[1,2,3].map(n=>`<button data-t="${esc(t)}" data-n="${n}" class="${n<=m?'on':''}" aria-label="${n} médaille">★</button>`).join('')}</span></div>`};
-  const todo=TRACKS.filter(([t])=>S.medals[t]<3).sort((a,b)=>S.medals[b[0]]-S.medals[a[0]]);
-  $('#page-medals').innerHTML=`<div class="phead"><div><h1>Médailles</h1><p>${done} pistes complètes sur 25. Clique sur les étoiles pour mettre à jour.</p></div>
+  const tile=([t])=>{const m=S.medals[t],off=S.noTracks[t];return`<div class="track ${m===3?'full':''} ${off?'off':''}"><span><b>${esc(t)}</b><span class="small muted" style="display:block">${off?'Non possédé':m===3?'Complet':m+' / 3'}</span>${m<3?`<button class="own" data-own="${esc(t)}">${off?'Je l\'ai maintenant':'Je ne l\'ai pas'}</button>`:''}</span><span class="stars">${[1,2,3].map(n=>`<button data-t="${esc(t)}" data-n="${n}" class="${n<=m?'on':''}" aria-label="${n} médaille">★</button>`).join('')}</span></div>`};
+  const todo=TRACKS.filter(([t])=>S.medals[t]<3&&!S.noTracks[t]).sort((a,b)=>S.medals[b[0]]-S.medals[a[0]]),off=TRACKS.filter(([t])=>S.noTracks[t]&&S.medals[t]<3);
+  $('#page-medals').innerHTML=`<div class="phead"><div><h1>Médailles</h1><p>${done} pistes complètes sur 25. Clique sur les étoiles pour mettre à jour. Une piste que tu n'as pas (DLC) : « Je ne l'ai pas ».</p></div>
    <div class="card pad-s" style="min-width:220px"><div class="spread"><span class="small muted">Total</span><b class="num" style="font-size:22px">${tot} / 75</b></div><div class="meter"><i style="width:${tot/75*100}%;background:var(--warn)"></i></div></div></div>
    ${todo.length?`<div class="sectiont">À compléter (${todo.length})</div><div class="tracks">${todo.map(tile).join('')}</div>`:''}
-   <div class="sectiont">Complètes (${done})</div><div class="tracks">${TRACKS.filter(([t])=>S.medals[t]===3).map(tile).join('')}</div>`;
+   <div class="sectiont">Complètes (${done})</div><div class="tracks">${TRACKS.filter(([t])=>S.medals[t]===3).map(tile).join('')}</div>
+   ${off.length?`<div class="sectiont">Pistes que tu n'as pas (${off.length})</div><p class="small muted" style="margin:-4px 0 12px">Jamais recommandées.</p><div class="tracks">${off.map(tile).join('')}</div>`:''}`;
+  $$('#page-medals [data-own]').forEach(b=>b.onclick=()=>{const t=b.dataset.own;if(S.noTracks[t])delete S.noTracks[t];else S.noTracks[t]=true;save();renderMedals()});
   $$('#page-medals .stars button').forEach(b=>b.onclick=()=>{const t=b.dataset.t,n=+b.dataset.n;S.medals[t]=S.medals[t]===n?n-1:n;save();renderMedals()});
 }
 

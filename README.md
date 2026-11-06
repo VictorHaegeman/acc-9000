@@ -12,6 +12,15 @@ Un coach qui te dit quoi rouler pour faire monter tes ratings ACC, et qui s'adap
 
 Pages : Accueil, Session, Objectifs (hebdo), Progression (graphiques), Historique, Médailles, Guide, Réglages.
 
+## Ce qui s'adapte à toi
+
+- **Temps dispo** (20 min, 45 min, 1 h 30) : les sessions trop longues passent en bas et la course IA est raccourcie.
+- **Variété** : une session déjà faite aujourd'hui descend dans les recommandations.
+- **Causes de contact** : pendant une course, tu touches la situation de chaque contact (départ, dépassement, défense, subi). Si une cause domine, elle devient la première consigne de tes courses, un objectif de la semaine, et elle ajuste la grille et l'IA.
+- **Objectifs automatiques** : ils avancent tout seuls avec les sessions enregistrées (barre de progression), sauf les règles du type « pas de serveur ouvert », vérifiées sur la semaine.
+- **Passage de phase** : annoncé à la fin de la session qui le déclenche.
+- **Pistes non possédées** (DLC) : « Je ne l'ai pas » dans Médailles ou sur la page Préparer, elles ne sont plus jamais recommandées.
+
 ## Sauvegarde automatique
 
 À choisir dans **Réglages** :
