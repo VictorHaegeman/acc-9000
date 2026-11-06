@@ -195,6 +195,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .goal h3{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .goal .why{font-size:13px;color:var(--muted);margin-top:6px}
 .goal.mini{padding:12px}
+.setup{display:flex;flex-direction:column}
+.setrow{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.setrow:first-child{border-top:0;padding-top:0}
+.setrow .lbl{font-size:13px;color:var(--muted);font-weight:600}
+.setrow select,.setrow input{padding:8px 10px}
+.setline{font-size:13px;color:#a8c7ff;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+@media (max-width:600px){.setrow{grid-template-columns:1fr;gap:4px}}
 .hist{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .hist+.hist{margin-top:8px}
 .hist .ico{width:42px;height:42px;border-radius:11px;background:var(--surface2);display:grid;place-items:center;color:var(--primary-h)}
@@ -426,6 +433,7 @@ function fmtDate(s){if(!s)return'';const[y,m,d]=s.split('-');return new Date(+y,
 function fmtTime(ms){const s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return(h?h+':'+pad(m):pad(m))+':'+pad(s%60)}
 function weekKey(d=new Date()){const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=x.getUTCDay()||7;x.setUTCDate(x.getUTCDate()+4-day);const y=new Date(Date.UTC(x.getUTCFullYear(),0,1));return x.getUTCFullYear()+'-W'+pad(Math.ceil(((x-y)/864e5+1)/7))}
 const sign=v=>(v>0?'+':'')+(Number.isInteger(v)?v:v.toFixed(1));
+function setupLine(setup){const g=k=>{const r=(setup||[]).find(x=>x[0]===k);return r?r[1]:null};return[g('Circuit'),g('Grille'),g('Départ')].filter(Boolean).join(' · ')}
 const chips=keys=>keys.map(k=>`<span class="chip"><i style="background:${COLORS[k]}"></i>${NAMES[k]}</span>`).join('');
 
 /* ================= derived ================= */
@@ -455,7 +463,7 @@ function templates(){
   T.push({id:'ai',type:'ai',title:'Course contre l\'IA',dur:40,boosts:['SA','RC','CN'],
     score:(r.SA<65?100:r.SA<80?70:30)+(trend<0?15:0),
     why:r.SA<80?'Rouler près des autres sans contact construit ton Trust, donc ta Safety, sans risque de te faire sortir.':'Entretien du racecraft sans risque pour ta Safety.',
-    steps:['Course rapide, grille pleine, 20 à 30 min de course','IA réglée pour finir en milieu de peloton','Tour 1 : tu suis, aucun dépassement','Dépasse seulement si ta roue avant est à hauteur avant la corde','Compte chaque contact avec le bouton +']});
+    steps:['Tour 1 : tu suis, aucun dépassement','Dépasse seulement si ta roue avant est à hauteur avant la corde','Garde une voiture d\'écart dans les freinages','Compte chaque contact avec le bouton +','À l\'arrivée, note ta position (ex. P8 / 18)']});
   if(mt)T.push({id:'medals',type:'practice',track:mt,title:'Médailles · '+mt,dur:30,boosts:['TR','CN','CC'],
     score:ph.n<=2?75:45,why:`${S.medals[mt]}/3 médailles sur ${mt}. Chaque médaille monte ton Track Competence et t'ouvre plus de serveurs.`,
     steps:['Hotlap ou entraînement solo sur '+mt,'Tours propres, sans couper la piste','Régularité avant le chrono','Continue jusqu\'aux 3 médailles']});
@@ -479,7 +487,52 @@ function templates(){
     why:'L\'échelle de référence pour la suite : tes résultats LFM, c\'est ton CV.',
     steps:['Inscription à la course sur LFM','Même voiture que d\'habitude','Qualif propre','Course : finir dans ton split sans incident']});
   T.forEach(t=>{const s=st(t.type);if(s&&s.n>=2){t.score+=s.avg*6;t.personal=`Pour toi : ${sign(s.avg)} SA en moyenne sur ${s.n} sessions`}});
+  T.forEach(t=>Object.assign(t,setupFor(t,r)));
   return T.sort((a,b)=>b.score-a.score);
+}
+
+/* ================= adaptive ACC setup per session ================= */
+function parseResult(s){const m=String(s||'').match(/P?\s*(\d+)\s*\/\s*(\d+)/i);return m&&+m[2]>0?{pos:+m[1],of:+m[2]}:null}
+function aiStats(){
+  const L=sessDesc().filter(s=>s.type==='ai');const last=L.slice(0,3);
+  let lvl=85;[...L].reverse().forEach(s=>{const p=parseResult(s.result);if(!p)return;const q=p.pos/p.of;if(q<=.34)lvl+=3;else if(q>.67)lvl-=3});
+  lvl=Math.max(70,Math.min(100,lvl));
+  return{n:L.length,c:last.length?last.reduce((a,s)=>a+(s.contacts||0),0)/last.length:0,lvl,hasRes:L.some(s=>parseResult(s.result))};
+}
+function familiarTrack(){
+  const full=TRACKS.map(([t])=>t).filter(t=>S.medals[t]===3);
+  const pool=full.length?full:TRACKS.map(([t])=>t).sort((a,b)=>S.medals[b]-S.medals[a]).slice(0,5);
+  const lastUse=t=>{const s=sessDesc().find(x=>x.track===t);return s?s.ts:0};
+  return pool.sort((a,b)=>lastUse(a)-lastUse(b))[0];
+}
+function setupFor(t,r){
+  const car=S.profile.car||'Ta voiture habituelle',fam=familiarTrack();
+  const C=['Voiture',car,'',`car`];
+  if(t.type==='ai'){
+    const a=aiStats();let grid,start,dur,reason;
+    if(!a.n){grid=18;start=12;dur=20;reason='Première course IA : grille moyenne et départ en milieu de peloton pour être entouré sans chaos.'}
+    else if(a.c>=1.5){grid=14;start=14;dur=20;reason=`${a.c.toFixed(1)} contacts par course IA récemment : grille réduite et départ en fond pour calmer le premier tour.`}
+    else if(a.c>=.5){grid=18;start=14;dur=25;reason=`${a.c.toFixed(1)} contact par course IA récemment : grille moyenne, départ en arrière de peloton.`}
+    else{grid=24;start=12;dur=30;reason=`Courses IA propres (${a.c.toFixed(1)} contact en moyenne) : grille pleine et départ au milieu. Plus de trafic, donc plus de Trust.`}
+    const aggr=r.SA<65?30:50;
+    return{track:fam,trackFree:true,reason,setup:[['Mode','Course rapide (ou week-end sans qualif)'],['Circuit',fam,'Une piste que tu connais par cœur : toute ton attention va au trafic','track'],C,
+      ['Grille',grid+' voitures'],['Départ','P'+start+' sur '+grid],
+      ['Force de l\'IA',a.lvl+' %',a.hasRes?'Ajustée sur tes derniers résultats IA':`À ajuster pour finir entre P${Math.ceil(grid/3)} et P${Math.ceil(grid*2/3)}, note ta place à la fin`],
+      ['Agressivité de l\'IA',aggr+' %',r.SA<65?'Basse tant que ta Safety est en reconstruction':''],['Durée de course',dur+' min'],['Météo','Sec, en journée']]};
+  }
+  if(t.id==='medals')return{reason:`Il te manque ${3-S.medals[t.track]} médaille${3-S.medals[t.track]>1?'s':''} sur ${t.track}, c'est la piste la plus proche du complet.`,
+    setup:[['Mode','Hotlap ou Entraînement, piste vide'],['Circuit',t.track],C,['Météo','Sec, en journée'],['Objectif','Tours propres et réguliers jusqu\'aux 3 médailles']]};
+  if(t.type==='pubf')return{reason:'Les serveurs filtrés regroupent des pilotes avec une Safety proche de la tienne : moins de contacts subis.',
+    setup:[['Mode','Multijoueur, serveurs publics'],['Filtre','Safety requise la plus haute que tu peux rejoindre',`Ton niveau : ${r.SA}`],['Circuit','Une piste où tu as 3 médailles','Par exemple '+fam],C,['Départ','Celui de ta qualif : qualif propre, sans prendre de risque']]};
+  if(t.type==='hotlap')return{reason:'Le Pace ne bouge qu\'avec les Special Events et les courses officielles.',
+    setup:[['Mode','Special Events, Hotlap de la semaine'],['Circuit et voiture','Imposés par l\'événement'],['Tentatives','Au moins 5 runs']]};
+  if(t.id==='cn')return{track:fam,trackFree:true,reason:'Sur une piste maîtrisée, tu travailles uniquement la répétition.',
+    setup:[['Mode','Entraînement'],['Circuit',fam,'','track'],C,['Tours','15 d\'affilée'],['Cible','Écart max de 0,5 s entre tes tours']]};
+  if(t.id==='tel')return{track:fam,trackFree:true,reason:'Une piste connue, pour que l\'écart avec la référence vienne de ta technique.',
+    setup:[['Mode','Entraînement'],['Circuit',fam,'','track'],C,['Outil','Ton outil de télémétrie habituel'],['Référence','Un tour plus rapide avec la même voiture']]};
+  if(t.type==='comp')return{reason:'Ta Competition ne monte qu\'ici.',setup:[['Mode','Multijoueur, Competition Server'],['Circuit','Celui du créneau','3 médailles obligatoires'],C,['Format','Qualif puis course']]};
+  if(t.type==='lfm')return{reason:'Les résultats LFM sont ceux que regardent les équipes.',setup:[['Plateforme','Low Fuel Motorsport'],['Circuit','Celui de la semaine'],C]};
+  return{};
 }
 
 /* ================= what to raise (adaptive priorities) ================= */
@@ -558,11 +611,11 @@ document.addEventListener('visibilitychange',tick);
 function renderHome(){
   const r=current(),ph=phase(r),pv=prevSnap(),{goals}=buildGoals(),rec=templates()[0],pr=projection();
   const a=S.active;
-  const hero=a?`<div class="hero"><div class="eyebrow">${a.stage==='run'?'Session en cours':'Session à terminer'}</div><h2>${esc(a.title)}</h2>
-      <p>${a.stage==='run'?'Chrono : <b class="num" data-timer>'+fmtTime(Date.now()-a.startedAt)+'</b>':'Il te reste à entrer tes données.'}</p>
+  const hero=a?`<div class="hero"><div class="eyebrow">${a.stage==='run'?'Session en cours':a.stage==='prep'?'Session prête à lancer':'Session à terminer'}</div><h2>${esc(a.title)}</h2>
+      <p>${a.stage==='run'?'Chrono : <b class="num" data-timer>'+fmtTime(Date.now()-a.startedAt)+'</b>':a.stage==='prep'?'Fais les réglages dans ACC, puis lance le chrono.':'Il te reste à entrer tes données.'}</p>
       <div class="actions"><a class="btn btn-primary btn-lg" href="#/session">${ico('play')}Reprendre</a></div></div>`
     :`<div class="hero"><svg class="bg" viewBox="0 0 24 24">${IC.route}</svg><div class="eyebrow">Session recommandée maintenant</div><h2>${esc(rec.title)}</h2><p>${esc(rec.why)}</p>
-      <div class="row" style="margin-top:14px">${chips(rec.boosts)}<span class="chip">${ico('clock')}~${rec.dur} min</span></div>
+      <div class="row" style="margin-top:14px">${chips(rec.boosts)}<span class="chip">${ico('clock')}~${rec.dur} min</span></div>${setupLine(rec.setup)?`<p class="setline" style="margin-top:12px">${ico('route')}${esc(setupLine(rec.setup))}</p>`:''}
       <div class="actions"><button class="btn btn-primary btn-lg" id="heroStart">${ico('play')}Démarrer cette session</button><a class="btn btn-secondary btn-lg" href="#/session">Choisir une autre session</a><button class="btn btn-ghost btn-lg" id="heroReg">${ico('edit')}Enregistrer une session passée</button></div></div>`;
   const delta=k=>{if(!pv)return'';const d=r[k]-pv[k];return d?`<span class="${d>0?'up':'down'}">${sign(d)}</span> depuis le dernier relevé`:'stable'};
   const saCol=r.SA<65?'var(--bad)':r.SA<80?'var(--warn)':'var(--good)';
@@ -590,28 +643,58 @@ function renderHome(){
 /* ================= SESSION ================= */
 let summary=null;
 function startSession(t){
-  S.active={stage:'run',mode:'live',tplId:t.id,title:t.title,type:t.type,track:t.track||lastTrack(),boosts:t.boosts||[],
-    steps:(t.steps||[]).map(x=>({t:x,done:false})),startedAt:Date.now(),contacts:0,offs:0,notes:''};
-  summary=null;save();go('session');toast('Session démarrée');
+  S.active={stage:'prep',mode:'live',tplId:t.id,title:t.title,type:t.type,track:t.track||lastTrack(),trackFree:!!t.trackFree,boosts:t.boosts||[],
+    why:t.why||'',reason:t.reason||'',setup:(t.setup||[]).map(r=>[...r]),
+    steps:(t.steps||[]).map(x=>({t:x,done:false})),startedAt:null,contacts:0,offs:0,notes:''};
+  summary=null;save();go('session');
 }
+function launchTimer(){const a=S.active;a.stage='run';a.startedAt=Date.now();save();renderSession();updateBar();window.scrollTo(0,0);toast('Chrono lancé, bonne session')}
 function startRegister(){S.active={stage:'finish',mode:'register',title:'Session enregistrée',type:'ai',track:lastTrack(),boosts:[],steps:[],startedAt:null,contacts:0,offs:0,notes:''};summary=null;save();go('session')}
 function lastTrack(){const s=sessDesc()[0];return s?s.track:missingTracks()[0]||TRACKS[0][0]}
 const opt=(obj,sel)=>Object.entries(obj).map(([k,v])=>`<option value="${k}" ${k===sel?'selected':''}>${v}</option>`).join('');
 const trackOpts=sel=>TRACKS.map(([t])=>`<option ${t===sel?'selected':''}>${esc(t)}</option>`).join('');
-function stepper(n){return`<div class="stepper">${['Choisir','Rouler','Terminer'].map((l,i)=>`<div data-n="${i+1}" class="${i+1===n?'on':i+1<n?'ok':''}">${l}</div>`).join('')}</div>`}
+function stepper(n){return`<div class="stepper">${['Choisir','Préparer','Rouler','Terminer'].map((l,i)=>`<div data-n="${i+1}" class="${i+1===n?'on':i+1<n?'ok':''}">${l}</div>`).join('')}</div>`}
 
 function renderSession(){
   const el=$('#page-session');
   if(summary&&!S.active)return renderSummary(el);
   if(!S.active)return renderPicker(el);
+  if(S.active.stage==='prep')return renderPrep(el);
   if(S.active.stage==='run')return renderRun(el);
   return renderFinish(el);
+}
+function renderPrep(el){
+  const a=S.active;
+  const row=(r,i)=>{const[l,v,note,kind]=r;let val=`<b>${esc(v)}</b>`;
+    if(kind==='track'&&a.trackFree)val=`<select data-setup="${i}" data-kind="track">${trackOpts(v)}</select>`;
+    if(kind==='car')val=`<input data-setup="${i}" data-kind="car" value="${esc(S.profile.car||'')}" placeholder="ex. BMW M4 GT3">`;
+    return`<div class="setrow"><span class="lbl">${esc(l)}</span><div>${val}${note?`<p class="hint" style="margin-top:4px">${esc(note)}</p>`:''}</div></div>`};
+  el.innerHTML=`${stepper(2)}
+   <div class="card"><span class="tag p2">${TYPES[a.type]}</span><h1 style="margin-top:8px">${esc(a.title)}</h1>
+     ${a.why?`<p class="muted" style="margin-top:6px;max-width:720px">${esc(a.why)}</p>`:''}<div class="row" style="margin-top:12px">${chips(a.boosts)}</div></div>
+   <div class="grid g2" style="margin-top:16px">
+     <div class="card"><div class="card-h"><h2>${ico('route')}À régler dans ACC</h2><span class="small muted">Avant de lancer</span></div>
+       ${a.setup.length?`<div class="setup">${a.setup.map(row).join('')}</div>`:`<div class="form"><div><label class="f">Circuit</label><select data-kind="track" id="prepTrack">${trackOpts(a.track)}</select></div></div>`}
+       ${a.reason?`<div class="highlight" style="margin-top:16px"><p class="small"><b>Pourquoi ces réglages</b></p><p class="small" style="margin-top:4px;color:#c6cfdd">${esc(a.reason)}</p></div>`:''}</div>
+     <div class="stack">
+       <div class="card"><div class="card-h"><h2>${ico('flag')}Les consignes</h2><span class="small muted">${a.steps.length} étapes</span></div>
+         ${a.steps.length?`<ol class="howto">${a.steps.map(s=>`<li>${esc(s.t)}</li>`).join('')}</ol>`:'<p class="muted">Pas de consigne : roule et note ce qui se passe.</p>'}</div>
+       <button class="btn btn-primary btn-lg btn-block" id="goTimer">${ico('play')}C'est réglé, lancer le chrono</button>
+       <div class="row"><button class="btn btn-ghost" id="prepBack">${ico('back')}Changer de session</button></div>
+     </div></div>`;
+  el.querySelectorAll('[data-kind]').forEach(inp=>inp.onchange=()=>{const i=inp.dataset.setup;
+    if(inp.dataset.kind==='track'){a.track=inp.value;if(i!=null)a.setup[i][1]=inp.value}
+    if(inp.dataset.kind==='car'){S.profile.car=inp.value.trim();if(i!=null)a.setup[i][1]=S.profile.car||'Ta voiture habituelle'}
+    save()});
+  $('#goTimer').onclick=launchTimer;
+  $('#prepBack').onclick=()=>{S.active=null;save();updateBar();renderSession()};
 }
 function renderPicker(el){
   const T=templates(),rec=T.slice(0,3),other=T.slice(3);
   const card=(t,i,isRec)=>`<div class="tpl ${isRec?'rec':''}">
      <div class="top"><div><h3>${esc(t.title)}</h3><p class="small muted" style="margin-top:2px">${TYPES[t.type]} · ~${t.dur} min</p></div>${isRec?`<span class="tag ${i===0?'best':'p2'}">${i===0?'Meilleur choix':'Recommandé'}</span>`:''}</div>
      <p class="why">${esc(t.why)}</p>
+     ${setupLine(t.setup)?`<p class="setline">${ico('route')}${esc(setupLine(t.setup))}</p>`:''}
      <div><p class="small faint" style="margin-bottom:6px">Fait progresser</p><div class="meta">${chips(t.boosts)}</div></div>
      ${t.personal?`<p class="pers">${esc(t.personal)}</p>`:''}
      <button class="btn ${isRec&&i===0?'btn-primary':'btn-secondary'} btn-block" data-start="${t.id}">${ico('play')}Démarrer</button></div>`;
@@ -639,9 +722,9 @@ function renderPicker(el){
 }
 function renderRun(el){
   const a=S.active;
-  el.innerHTML=`${stepper(2)}
+  el.innerHTML=`${stepper(3)}
    <div class="card"><div class="runhead"><div><span class="tag p2">${TYPES[a.type]}</span><h1 style="margin-top:8px">${esc(a.title)}</h1>
-      <div class="row" style="margin-top:10px">${chips(a.boosts)}</div></div>
+      <div class="row" style="margin-top:10px">${chips(a.boosts)}</div>${setupLine(a.setup)?`<p class="setline" style="margin-top:10px">${ico('route')}${esc(setupLine(a.setup))}</p>`:''}</div>
       <div style="text-align:right"><div class="small muted">Chrono</div><div class="timer num" data-timer>${fmtTime(Date.now()-a.startedAt)}</div></div></div></div>
    <div class="grid g2" style="margin-top:16px">
      <div class="card"><div class="card-h"><h2>${ico('flag')}À faire</h2><span class="small muted" id="stepCount"></span></div>
@@ -669,7 +752,7 @@ function renderRun(el){
 function renderFinish(el){
   const a=S.active,r=current(),reg=a.mode==='register';
   const dur=a.startedAt?Math.max(1,Math.round(((a.endedAt||Date.now())-a.startedAt)/60000)):30;
-  el.innerHTML=`${stepper(3)}<div class="phead"><div><h1>${reg?'Enregistrer une session':'Fin de session'}</h1><p>${reg?'Entre les données de ta session.':'Plus que tes données et c\'est fini.'}</p></div>
+  el.innerHTML=`${stepper(4)}<div class="phead"><div><h1>${reg?'Enregistrer une session':'Fin de session'}</h1><p>${reg?'Entre les données de ta session.':'Plus que tes données et c\'est fini.'}</p></div>
      ${reg?'':`<button class="btn btn-ghost" id="backRun">${ico('back')}Retour à la session</button>`}</div>
    <div class="grid g2">
      <div class="card"><h2 style="margin-bottom:14px">La session</h2>
@@ -680,7 +763,7 @@ function renderFinish(el){
          <div><label class="f">Durée (min)</label><input type="number" id="fDur" min="0" value="${dur}"></div>
          <div><label class="f">Contacts</label><input type="number" id="fContacts" min="0" value="${a.contacts}"></div>
          <div><label class="f">Sorties de piste</label><input type="number" id="fOffs" min="0" value="${a.offs}"></div>
-         <div><label class="f">Résultat</label><input id="fResult" placeholder="ex. P8 / 24"></div>
+         <div><label class="f">Résultat</label><input id="fResult" placeholder="ex. P8 / 24">${a.type==='ai'?'<p class="hint">Format P8 / 18 : sert à régler la force de l\'IA la prochaine fois</p>':''}</div>
          <div class="full"><label class="f">Ressenti</label><div class="seg" id="fFeel">${['Galère','Moyen','Correct','Bien','Top'].map((l,i)=>`<button type="button" data-v="${i+1}" class="${i===2?'on':''}">${l}</button>`).join('')}</div></div>
          <div class="full"><label class="f">Médailles sur ce circuit</label><div class="seg" id="fMedals"></div></div>
          <div class="full"><label class="f">Notes</label><textarea id="fNotes" rows="3">${esc(a.notes)}</textarea></div>
@@ -710,7 +793,7 @@ function finishSession(){
   const s={ts:Date.now(),date:a.mode==='register'?($('#fDate').value||today()):today(),title:a.title,type:$('#fType').value,track,
     dur:num('#fDur')||0,contacts:num('#fContacts')||0,offs:num('#fOffs')||0,result:$('#fResult').value.trim(),
     feel:+($('#fFeel .on')||{}).dataset?.v||3,notes:$('#fNotes').value.trim(),boosts:a.boosts,
-    stepsDone:a.steps.filter(x=>x.done).length,stepsTotal:a.steps.length};
+    stepsDone:a.steps.filter(x=>x.done).length,stepsTotal:a.steps.length,setup:a.setup||[]};
   if(sa!==null){s.saAfter=sa;s.saDelta=sa-before.SA}
   S.sessions.push(s);
   const m=+(($('#fMedals .on')||{}).dataset?.v??S.medals[track]),mGain=m-S.medals[track];S.medals[track]=m;
@@ -785,7 +868,7 @@ function drawCharts(){
 
 /* ================= HISTORY ================= */
 function histHTML(s){const d=typeof s.saDelta==='number'?s.saDelta:null;
-  return`<div class="hist"><span class="ico">${ico(TYPE_ICON[s.type]||'route')}</span><div><b>${esc(s.title||TYPES[s.type])}</b><div class="sub">${fmtDate(s.date)} · ${esc(s.track)} · ${s.dur||0} min · ${s.contacts} contact${s.contacts>1?'s':''}${s.result?' · '+esc(s.result):''}</div></div>
+  return`<div class="hist"><span class="ico">${ico(TYPE_ICON[s.type]||'route')}</span><div><b>${esc(s.title||TYPES[s.type])}</b><div class="sub">${fmtDate(s.date)} · ${esc(s.track)} · ${s.dur||0} min · ${s.contacts} contact${s.contacts>1?'s':''}${s.result?' · '+esc(s.result):''}</div>${setupLine(s.setup)&&s.type==='ai'?`<div class="sub" style="color:#a8c7ff">${esc(setupLine(s.setup).split(' · ').slice(1).join(' · '))}</div>`:''}</div>
    <div class="delta ${d==null?'flat':d>0?'up':d<0?'down':'flat'}">${d==null?'—':sign(d)+' SA'}<div class="small faint" style="font-weight:500">${s.saAfter!=null?'SA '+s.saAfter:''}</div></div>
    ${s.notes||page==='history'?`<div class="note" ${s.notes?'':'style="display:none"'}>${esc(s.notes)}</div>`:''}
    ${page==='history'?`<div style="grid-column:1/-1;text-align:right"><button class="btn btn-ghost btn-sm" data-del="${s.ts}">${ico('trash')}Supprimer</button></div>`:''}</div>`}
@@ -841,6 +924,7 @@ function renderSettings(){
    <div class="grid g2">
     <div class="card"><div class="card-h"><h2>${ico('users')}Profil</h2></div>
       <label class="f">Prénom ou pseudo</label><div class="row"><input id="pName" value="${esc(S.profile.name)}" style="flex:1;min-width:160px"><button class="btn btn-secondary" id="pSave">Enregistrer</button></div>
+      <label class="f" style="margin-top:14px">Voiture habituelle</label><div class="row"><input id="pCar" value="${esc(S.profile.car||'')}" placeholder="ex. BMW M4 GT3" style="flex:1;min-width:160px"><button class="btn btn-secondary" id="pCarSave">Enregistrer</button></div>
       <label class="f" style="margin-top:14px">Total rating visé</label><div class="row"><input type="number" id="tgt" value="${S.target}" style="flex:1;min-width:160px"><button class="btn btn-secondary" id="tgtSave">Enregistrer</button></div></div>
 
     <div class="card"><div class="card-h"><h2>${ico('flag')}Sauvegarde GitHub</h2><span class="tag ${gh?'best':'p3'}">${gh?'Connectée':'Recommandée'}</span></div>
@@ -865,6 +949,7 @@ function renderSettings(){
    </div>`;
   const busy=async(btn,fn)=>{const t=btn.innerHTML;btn.disabled=true;btn.textContent='…';try{await fn()}catch(e){toast(e.message||'Erreur')}btn.disabled=false;if(btn.isConnected)btn.innerHTML=t};
   $('#pSave').onclick=()=>{S.profile.name=$('#pName').value.trim()||'Pilote';save();toast('Profil mis à jour')};
+  $('#pCarSave').onclick=()=>{S.profile.car=$('#pCar').value.trim();save();toast('Voiture enregistrée')};
   $('#tgtSave').onclick=()=>{S.target=+$('#tgt').value||9000;save();toast('Objectif mis à jour')};
   const q=id=>document.getElementById(id);
   if(q('ghConnect'))q('ghConnect').onclick=e=>busy(e.currentTarget,async()=>{const r=await connectGH(readGhForm());toast(r==='loaded'?'Données chargées depuis GitHub':'Connecté : sauvegarde automatique active');route()});
