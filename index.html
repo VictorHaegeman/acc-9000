@@ -463,7 +463,7 @@ function templates(){
   T.push({id:'ai',type:'ai',title:'Course contre l\'IA',dur:40,boosts:['SA','RC','CN'],
     score:(r.SA<65?100:r.SA<80?70:30)+(trend<0?15:0),
     why:r.SA<80?'Rouler près des autres sans contact construit ton Trust, donc ta Safety, sans risque de te faire sortir.':'Entretien du racecraft sans risque pour ta Safety.',
-    steps:['Tour 1 : tu suis, aucun dépassement','Dépasse seulement si ta roue avant est à hauteur avant la corde','Garde une voiture d\'écart dans les freinages','Compte chaque contact avec le bouton +','À l\'arrivée, note ta position (ex. P8 / 18)']});
+    steps:['Tour 1 : tu suis, aucun dépassement','Dépasse seulement si ta roue avant est à hauteur avant la corde','Garde une voiture d\'écart dans les freinages','Compte chaque contact avec le bouton +','À l\'arrivée, note ta position finale']});
   if(mt)T.push({id:'medals',type:'practice',track:mt,title:'Médailles · '+mt,dur:30,boosts:['TR','CN','CC'],
     score:ph.n<=2?75:45,why:`${S.medals[mt]}/3 médailles sur ${mt}. Chaque médaille monte ton Track Competence et t'ouvre plus de serveurs.`,
     steps:['Hotlap ou entraînement solo sur '+mt,'Tours propres, sans couper la piste','Régularité avant le chrono','Continue jusqu\'aux 3 médailles']});
@@ -493,11 +493,17 @@ function templates(){
 
 /* ================= adaptive ACC setup per session ================= */
 function parseResult(s){const m=String(s||'').match(/P?\s*(\d+)\s*\/\s*(\d+)/i);return m&&+m[2]>0?{pos:+m[1],of:+m[2]}:null}
+function racePos(s){if(s.finish&&s.grid)return{start:s.start||null,finish:s.finish,grid:s.grid};const p=parseResult(s.result);return p?{start:null,finish:p.pos,grid:p.of}:null}
+/* Force de l'IA : +3 si tu remontes facilement sans contact, -3 si tu perds 3 places ou plus, +2 si podium propre */
 function aiStats(){
-  const L=sessDesc().filter(s=>s.type==='ai');const last=L.slice(0,3);
-  let lvl=85;[...L].reverse().forEach(s=>{const p=parseResult(s.result);if(!p)return;const q=p.pos/p.of;if(q<=.34)lvl+=3;else if(q>.67)lvl-=3});
-  lvl=Math.max(70,Math.min(100,lvl));
-  return{n:L.length,c:last.length?last.reduce((a,s)=>a+(s.contacts||0),0)/last.length:0,lvl,hasRes:L.some(s=>parseResult(s.result))};
+  const L=sessDesc().filter(s=>s.type==='ai'),last=L.slice(0,3);
+  let lvl=85,lastD=0,lastP=null;
+  [...L].reverse().forEach(s=>{const p=racePos(s);if(!p)return;let d=0;const cl=(s.contacts||0)<2;
+    if(p.start){const g=p.start-p.finish,big=Math.max(3,Math.round(p.grid*.2));if(g>=big&&cl)d=3;else if(g<=-3)d=-3;else if(p.finish<=3&&cl)d=2}
+    else{const q=p.finish/p.grid;if(q<=.34)d=3;else if(q>.67)d=-3}
+    lvl=Math.max(70,Math.min(100,lvl+d));lastD=d;lastP=p});
+  const G=last.map(racePos).filter(p=>p&&p.start).map(p=>p.start-p.finish);
+  return{n:L.length,c:last.length?last.reduce((a,s)=>a+(s.contacts||0),0)/last.length:0,lvl,lastD,lastP,avgGain:G.length?G.reduce((a,b)=>a+b,0)/G.length:null};
 }
 function familiarTrack(){
   const full=TRACKS.map(([t])=>t).filter(t=>S.medals[t]===3);
@@ -514,10 +520,13 @@ function setupFor(t,r){
     else if(a.c>=1.5){grid=14;start=14;dur=20;reason=`${a.c.toFixed(1)} contacts par course IA récemment : grille réduite et départ en fond pour calmer le premier tour.`}
     else if(a.c>=.5){grid=18;start=14;dur=25;reason=`${a.c.toFixed(1)} contact par course IA récemment : grille moyenne, départ en arrière de peloton.`}
     else{grid=24;start=12;dur=30;reason=`Courses IA propres (${a.c.toFixed(1)} contact en moyenne) : grille pleine et départ au milieu. Plus de trafic, donc plus de Trust.`}
-    const aggr=r.SA<65?30:50;
+    if(a.c<.5&&a.avgGain!=null&&a.avgGain>=3){start=grid-2;reason+=` Tu remontes en moyenne de ${a.avgGain.toFixed(0)} places : départ plus loin pour travailler les dépassements propres.`}
+    else if(a.avgGain!=null&&a.avgGain<=-2){start=Math.round(grid/2);reason+=` Tu perds en moyenne ${Math.abs(a.avgGain).toFixed(0)} places : départ au milieu et IA plus douce.`}
+    const aggr=r.SA<65?30:50,lp=a.lastP;
+    const iaNote=lp?(lp.start?`Dernière course : P${lp.start} → P${lp.finish} (${sign(lp.start-lp.finish)} places), `:`Dernière course : P${lp.finish} / ${lp.grid}, `)+(a.lastD>0?'IA renforcée':a.lastD<0?'IA adoucie':'IA inchangée'):`Note ton départ et ton arrivée à la fin : la force s'ajustera toute seule`;
     return{track:fam,trackFree:true,reason,setup:[['Mode','Course rapide (ou week-end sans qualif)'],['Circuit',fam,'Une piste que tu connais par cœur : toute ton attention va au trafic','track'],C,
       ['Grille',grid+' voitures'],['Départ','P'+start+' sur '+grid],
-      ['Force de l\'IA',a.lvl+' %',a.hasRes?'Ajustée sur tes derniers résultats IA':`À ajuster pour finir entre P${Math.ceil(grid/3)} et P${Math.ceil(grid*2/3)}, note ta place à la fin`],
+      ['Force de l\'IA',a.lvl+' %',iaNote],
       ['Agressivité de l\'IA',aggr+' %',r.SA<65?'Basse tant que ta Safety est en reconstruction':''],['Durée de course',dur+' min'],['Météo','Sec, en journée']]};
   }
   if(t.id==='medals')return{reason:`Il te manque ${3-S.medals[t.track]} médaille${3-S.medals[t.track]>1?'s':''} sur ${t.track}, c'est la piste la plus proche du complet.`,
@@ -751,6 +760,7 @@ function renderRun(el){
 }
 function renderFinish(el){
   const a=S.active,r=current(),reg=a.mode==='register';
+  const pre=(()=>{const r=(a.setup||[]).find(x=>x[0]==='Départ'),m=r&&String(r[1]).match(/P(\d+)\s*sur\s*(\d+)/);return m?{start:+m[1],grid:+m[2]}:{}})();
   const dur=a.startedAt?Math.max(1,Math.round(((a.endedAt||Date.now())-a.startedAt)/60000)):30;
   el.innerHTML=`${stepper(4)}<div class="phead"><div><h1>${reg?'Enregistrer une session':'Fin de session'}</h1><p>${reg?'Entre les données de ta session.':'Plus que tes données et c\'est fini.'}</p></div>
      ${reg?'':`<button class="btn btn-ghost" id="backRun">${ico('back')}Retour à la session</button>`}</div>
@@ -763,7 +773,12 @@ function renderFinish(el){
          <div><label class="f">Durée (min)</label><input type="number" id="fDur" min="0" value="${dur}"></div>
          <div><label class="f">Contacts</label><input type="number" id="fContacts" min="0" value="${a.contacts}"></div>
          <div><label class="f">Sorties de piste</label><input type="number" id="fOffs" min="0" value="${a.offs}"></div>
-         <div><label class="f">Résultat</label><input id="fResult" placeholder="ex. P8 / 24">${a.type==='ai'?'<p class="hint">Format P8 / 18 : sert à régler la force de l\'IA la prochaine fois</p>':''}</div>
+         <div class="full" id="posBox"><div class="form" style="grid-template-columns:repeat(3,1fr)">
+           <div><label class="f">Départ</label><input type="number" id="fStart" min="1" placeholder="P" value="${pre.start??''}"></div>
+           <div><label class="f">Arrivée</label><input type="number" id="fFinish" min="1" placeholder="P"></div>
+           <div><label class="f">Voitures</label><input type="number" id="fGrid" min="1" value="${pre.grid??''}"></div></div>
+           <p class="hint" id="posHint">Départ et arrivée servent à régler l'IA et ta position de départ la prochaine fois.</p></div>
+         <div id="resBox"><label class="f">Résultat</label><input id="fResult" placeholder="ex. rang 1240 / 9000"></div>
          <div class="full"><label class="f">Ressenti</label><div class="seg" id="fFeel">${['Galère','Moyen','Correct','Bien','Top'].map((l,i)=>`<button type="button" data-v="${i+1}" class="${i===2?'on':''}">${l}</button>`).join('')}</div></div>
          <div class="full"><label class="f">Médailles sur ce circuit</label><div class="seg" id="fMedals"></div></div>
          <div class="full"><label class="f">Notes</label><textarea id="fNotes" rows="3">${esc(a.notes)}</textarea></div>
@@ -782,6 +797,9 @@ function renderFinish(el){
   const seg=(id)=>{$(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))})};
   const medalSeg=()=>{const t=$('#fTrack').value,m=S.medals[t];$('#fMedals').innerHTML=[0,1,2,3].map(n=>`<button type="button" data-v="${n}" class="${n===m?'on':''}">${n} ★</button>`).join('');seg('#fMedals')};
   seg('#fFeel');medalSeg();$('#fTrack').onchange=medalSeg;
+  const posVis=()=>{const m=MULTI.includes($('#fType').value);$('#posBox').style.display=m?'':'none';$('#resBox').style.display=m?'none':''};posVis();$('#fType').onchange=posVis;
+  const posHint=()=>{const s=+$('#fStart').value,f=+$('#fFinish').value;$('#posHint').innerHTML=s&&f?`<b class="${s-f>0?'up':s-f<0?'down':'flat'}">${s-f>0?'+':''}${s-f} place${Math.abs(s-f)>1?'s':''}</b> · P${s} → P${f}`:'Départ et arrivée servent à régler l\'IA et ta position de départ la prochaine fois.'};
+  ['#fStart','#fFinish'].forEach(id=>$(id).oninput=posHint);
   $('#fAll').onchange=e=>$('#allBox').style.display=e.target.checked?'':'none';
   const back=$('#backRun');if(back)back.onclick=()=>{a.stage='run';delete a.endedAt;save();renderSession();updateBar()};
   const cr=$('#cancelReg');if(cr)cr.onclick=()=>{S.active=null;save();updateBar();go('session')};
@@ -794,6 +812,7 @@ function finishSession(){
     dur:num('#fDur')||0,contacts:num('#fContacts')||0,offs:num('#fOffs')||0,result:$('#fResult').value.trim(),
     feel:+($('#fFeel .on')||{}).dataset?.v||3,notes:$('#fNotes').value.trim(),boosts:a.boosts,
     stepsDone:a.steps.filter(x=>x.done).length,stepsTotal:a.steps.length,setup:a.setup||[]};
+  if(MULTI.includes(s.type)){const st=num('#fStart'),fi=num('#fFinish'),gr=num('#fGrid');if(fi){s.finish=fi;if(st)s.start=st;if(gr)s.grid=gr;s.result=`P${fi}${gr?' / '+gr:''}`}else s.result=''}
   if(sa!==null){s.saAfter=sa;s.saDelta=sa-before.SA}
   S.sessions.push(s);
   const m=+(($('#fMedals .on')||{}).dataset?.v??S.medals[track]),mGain=m-S.medals[track];S.medals[track]=m;
@@ -808,7 +827,8 @@ function renderSummary(el){
      <div class="card kpi"><div class="l">Safety</div><div class="v num ${d==null?'':d>0?'up':d<0?'down':'flat'}">${d==null?'—':sign(d)}</div><div class="d">${s.saAfter!=null?'Maintenant à '+s.saAfter:'Non renseignée'}</div></div>
      <div class="card kpi"><div class="l">Contacts</div><div class="v num ${s.contacts?'down':'up'}">${s.contacts}</div><div class="d">${s.contacts?'À réduire la prochaine fois':'Session propre'}</div></div>
      <div class="card kpi"><div class="l">Médailles</div><div class="v num ${mGain>0?'up':''}">${mGain>0?'+'+mGain:'='}</div><div class="d">${medalsTotal()} / 75 au total</div></div>
-     <div class="card kpi"><div class="l">Étapes</div><div class="v num">${s.stepsTotal?s.stepsDone+'<small> / '+s.stepsTotal+'</small>':'—'}</div><div class="d">consignes cochées</div></div>
+     ${s.finish&&s.start?`<div class="card kpi"><div class="l">Places</div><div class="v num ${s.start-s.finish>0?'up':s.start-s.finish<0?'down':'flat'}">${sign(s.start-s.finish)}</div><div class="d">P${s.start} → P${s.finish}${s.grid?' sur '+s.grid:''}</div></div>`
+      :`<div class="card kpi"><div class="l">Étapes</div><div class="v num">${s.stepsTotal?s.stepsDone+'<small> / '+s.stepsTotal+'</small>':'—'}</div><div class="d">consignes cochées</div></div>`}
    </div>
    <div class="card" style="margin-top:16px"><div class="spread"><div><p class="small muted">Prochaine session conseillée</p><h2 style="margin-top:4px">${esc(next.title)}</h2><p class="muted small" style="margin-top:4px">${esc(next.why)}</p></div>
      <div class="row"><button class="btn btn-primary" id="nextGo">${ico('play')}Démarrer</button><a class="btn btn-secondary" href="#/goals">Voir mes objectifs</a><button class="btn btn-ghost" id="sumHome">Accueil</button></div></div></div>`;
@@ -868,7 +888,7 @@ function drawCharts(){
 
 /* ================= HISTORY ================= */
 function histHTML(s){const d=typeof s.saDelta==='number'?s.saDelta:null;
-  return`<div class="hist"><span class="ico">${ico(TYPE_ICON[s.type]||'route')}</span><div><b>${esc(s.title||TYPES[s.type])}</b><div class="sub">${fmtDate(s.date)} · ${esc(s.track)} · ${s.dur||0} min · ${s.contacts} contact${s.contacts>1?'s':''}${s.result?' · '+esc(s.result):''}</div>${setupLine(s.setup)&&s.type==='ai'?`<div class="sub" style="color:#a8c7ff">${esc(setupLine(s.setup).split(' · ').slice(1).join(' · '))}</div>`:''}</div>
+  return`<div class="hist"><span class="ico">${ico(TYPE_ICON[s.type]||'route')}</span><div><b>${esc(s.title||TYPES[s.type])}</b><div class="sub">${fmtDate(s.date)} · ${esc(s.track)} · ${s.dur||0} min · ${s.contacts} contact${s.contacts>1?'s':''}${s.finish&&s.start?` · P${s.start} → P${s.finish}${s.grid?' / '+s.grid:''} (${sign(s.start-s.finish)})`:s.result?' · '+esc(s.result):''}</div>${setupLine(s.setup)&&s.type==='ai'?`<div class="sub" style="color:#a8c7ff">${esc(setupLine(s.setup).split(' · ').slice(1).join(' · '))}</div>`:''}</div>
    <div class="delta ${d==null?'flat':d>0?'up':d<0?'down':'flat'}">${d==null?'—':sign(d)+' SA'}<div class="small faint" style="font-weight:500">${s.saAfter!=null?'SA '+s.saAfter:''}</div></div>
    ${s.notes||page==='history'?`<div class="note" ${s.notes?'':'style="display:none"'}>${esc(s.notes)}</div>`:''}
    ${page==='history'?`<div style="grid-column:1/-1;text-align:right"><button class="btn btn-ghost btn-sm" data-del="${s.ts}">${ico('trash')}Supprimer</button></div>`:''}</div>`}
