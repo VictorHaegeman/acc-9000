@@ -1,19 +1,31 @@
-# Objectif 9000 — suivi ACC
+# ACC 9000 — coach de progression Assetto Corsa Competizione
 
-Petit site perso pour suivre mes ratings Assetto Corsa Competizione et générer des objectifs hebdo qui s'adaptent à mes sessions.
+Site : https://victorhaegeman.github.io/acc-9000/
 
-## Mise en ligne (GitHub Pages)
+Un coach qui te dit quoi rouler pour faire monter tes ratings ACC, et qui s'adapte après chaque session.
 
-1. Crée un dépôt sur GitHub (ex. `acc-9000`), public.
-2. Mets `index.html` (et ce README) à la racine du dépôt.
-3. Dans le dépôt : **Settings → Pages → Build and deployment → Source : Deploy from a branch**, branche `main`, dossier `/ (root)`, puis **Save**.
-4. Après une minute, le site est en ligne sur `https://<ton-pseudo>.github.io/acc-9000/`.
+## Comment ça marche
 
-## Utilisation
+1. **Démarrer** : l'app te propose 3 sessions recommandées, calculées sur tes points faibles (Safety, Pace, médailles…). Chaque carte indique ce qu'elle fait progresser. Tu peux aussi lancer une session personnalisée.
+2. **Rouler** : chrono, consignes à cocher, compteurs de contacts et de sorties de piste. Tout est sauvegardé en continu, tu peux fermer l'onglet pendant que tu roules.
+3. **Terminer** : tu entres ta Safety après la session (et tous tes ratings si tu veux). L'app apprend quels types de sessions te font progresser et ajuste ses recommandations.
 
-- **Journal** : après chaque session, ajoute le type, le circuit, les contacts et ta SA après la session.
-- **Relevé** : 1 à 2 fois par semaine, recopie tes ratings depuis Driver Profile / Rating.
-- **Médailles** : clique sur les étoiles quand tu en gagnes.
-- **Objectifs** : recalculés automatiquement, à cocher au fil de la semaine.
+Pages : Accueil, Session, Objectifs (hebdo), Progression (graphiques), Historique, Médailles, Guide, Réglages.
 
-Les données sont stockées dans le navigateur. Pense à faire **Données → Exporter** de temps en temps, surtout si tu changes de PC ou de navigateur.
+## Sauvegarde automatique
+
+À choisir dans **Réglages** :
+
+- **GitHub (recommandé)** : tes données sont écrites automatiquement dans un dépôt privé, par exemple `acc-9000-data`, fichier `data/<ton-pseudo>.json`. Tu les retrouves sur n'importe quel appareil.
+  1. Crée un dépôt **privé** `acc-9000-data` (coche « Add a README »).
+  2. GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token.
+  3. Repository access : **Only select repositories** → `acc-9000-data`. Permissions : **Contents : Read and write**.
+  4. Colle le token dans Réglages → Sauvegarde GitHub.
+
+  Le token reste uniquement dans ton navigateur. Il n'est jamais écrit dans tes données ni sur GitHub.
+- **Fichier sur ton PC** (Chrome et Edge) : un fichier `.json` mis à jour à chaque modification. Mets-le dans OneDrive ou Google Drive pour l'avoir partout. Brave et Firefox bloquent cette option par défaut.
+- **Export / import** manuel en secours.
+
+## Partager avec un pote
+
+Il ouvre le même lien et crée son profil avec ses propres stats. Ses recommandations et objectifs sont calculés sur ses points faibles. Pour sa sauvegarde : son propre dépôt, ou ajoute-le en collaborateur sur `acc-9000-data` et il utilise son fichier (`data/son-pseudo.json`) avec son propre token.
