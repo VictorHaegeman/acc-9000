@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Objectif 9000</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0e0f11;--panel:#17191c;--panel2:#1f2226;--line:#2c3036;
+  --text:#eceff3;--muted:#8d949e;--accent:#f5b301;--accent2:#ffcf4d;
+  --good:#3ecf6e;--warn:#ff9f1c;--bad:#ff4d4d;--blue:#4da3ff;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,sans-serif}
+h1,h2,h3,.cond{font-family:"Barlow Condensed",sans-serif;letter-spacing:.02em;text-transform:uppercase}
+h1{margin:0;font-size:28px;font-weight:700}
+h2{font-size:22px;margin:0 0 12px}
+h3{font-size:17px;margin:0 0 6px}
+a{color:var(--accent2)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px 60px}
+header{border-bottom:3px solid var(--accent);background:linear-gradient(180deg,#1b1d21,#121316);position:sticky;top:0;z-index:5}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:12px;padding-bottom:0;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand span{color:var(--accent)}
+.brand small{color:var(--muted);font-size:13px}
+nav{display:flex;gap:2px;overflow-x:auto;width:100%;margin-top:8px}
+nav button{background:none;border:0;color:var(--muted);font:600 16px "Barlow Condensed";text-transform:uppercase;padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-3px;white-space:nowrap}
+nav button.on{color:var(--text);border-color:var(--accent2)}
+section{display:none;padding-top:20px}
+section.on{display:block}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.phase{background:linear-gradient(90deg,#2a2208,var(--panel) 60%);border-left:4px solid var(--accent)}
+.phase .tag{color:var(--accent);font:700 14px "Barlow Condensed";text-transform:uppercase}
+.phase h2{margin:2px 0 6px;font-size:26px}
+.kpi .v{font:700 40px/1 "Barlow Condensed"}
+.kpi .l{color:var(--muted);font-size:13px}
+.kpi .d{font-size:13px;margin-top:4px}
+.up{color:var(--good)}.down{color:var(--bad)}.flat{color:var(--muted)}
+.bar{height:10px;background:var(--panel2);border-radius:6px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:6px}
+.rating{display:grid;grid-template-columns:120px 1fr 40px;align-items:center;gap:10px;margin:7px 0}
+.rating .n{font:600 15px "Barlow Condensed";text-transform:uppercase;color:var(--muted)}
+.rating .val{font:700 20px "Barlow Condensed";text-align:right}
+.goal{display:flex;gap:12px;padding:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);margin-bottom:10px}
+.goal.done{opacity:.55}
+.goal input{width:22px;height:22px;accent-color:var(--accent);flex:0 0 auto;margin-top:2px}
+.goal .why{color:var(--muted);font-size:13px;margin-top:6px}
+.pill{display:inline-block;font:600 12px Inter;padding:2px 8px;border-radius:20px;background:var(--panel2);color:var(--muted);margin-right:6px;vertical-align:middle}
+.pill.p1{background:#3a1414;color:#ff8a8a}.pill.p2{background:#3a2a0b;color:var(--accent2)}.pill.p3{background:#13283a;color:#8cc4ff}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);border-color:transparent}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.form .full{grid-column:1/-1}
+.btn{background:var(--accent);color:#111;border:0;border-radius:8px;padding:10px 16px;font:700 16px "Barlow Condensed";text-transform:uppercase;cursor:pointer}
+.btn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.btn.danger{background:#3a1414;color:#ff8a8a}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase}
+.tablewrap{overflow-x:auto}
+.tracks{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.track{display:flex;justify-content:space-between;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.track.full{border-color:#3d3310}
+.stars button{background:none;border:0;font-size:20px;cursor:pointer;color:#444b55;padding:0 2px}
+.stars button.on{color:var(--accent)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.plan p,.plan li{color:#cfd4da}
+.plan ul{padding-left:20px;margin:6px 0}
+.chartbox{position:relative;height:240px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:#111;padding:10px 18px;border-radius:8px;font-weight:600;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1}
+.weekprog{font:700 15px "Barlow Condensed";color:var(--accent2)}
+@media (max-width:600px){.rating{grid-template-columns:96px 1fr 34px}.kpi .v{font-size:34px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand"><h1>Objectif <span>9000</span></h1><small>ACC · plan adaptatif</small></div>
+    <nav id="nav">
+      <button data-t="dash" class="on">Tableau de bord</button>
+      <button data-t="goals">Objectifs</button>
+      <button data-t="log">Journal</button>
+      <button data-t="medals">Médailles</button>
+      <button data-t="plan">Le plan</button>
+      <button data-t="data">Données</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+<!-- DASHBOARD -->
+<section id="dash" class="on">
+  <div class="card phase" id="phaseCard"></div>
+  <div class="grid g4" style="margin-top:14px" id="kpis"></div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card"><h2>Ratings</h2><div id="ratings"></div><p class="small muted" id="snapInfo"></p></div>
+    <div class="card"><h2>Safety dans le temps</h2><div class="chartbox"><canvas id="saChart"></canvas></div></div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card"><h2>Évolution des ratings</h2><div class="chartbox"><canvas id="allChart"></canvas></div></div>
+    <div class="card"><h2>Ce qui fait bouger ta SA</h2><div id="typeStats"></div></div>
+  </div>
+</section>
+
+<!-- GOALS -->
+<section id="goals">
+  <div class="row" style="justify-content:space-between;margin-bottom:12px">
+    <h2 style="margin:0">Objectifs de la semaine</h2>
+    <span class="weekprog" id="weekProg"></span>
+  </div>
+  <p class="muted small">Recalculés à chaque relevé et à chaque session ajoutée. Coche ce que tu as fait cette semaine.</p>
+  <div id="goalList"></div>
+</section>
+
+<!-- LOG -->
+<section id="log">
+  <div class="grid g2">
+    <div class="card">
+      <h2>Ajouter une session</h2>
+      <form id="sessForm" class="form">
+        <div><label>Date</label><input type="date" name="date" required></div>
+        <div><label>Type</label><select name="type" id="typeSel"></select></div>
+        <div><label>Circuit</label><select name="track" id="trackSel"></select></div>
+        <div><label>Durée (min)</label><input type="number" name="dur" min="0" value="30"></div>
+        <div><label>Contacts</label><input type="number" name="contacts" min="0" value="0"></div>
+        <div><label>Sorties de piste</label><input type="number" name="offs" min="0" value="0"></div>
+        <div><label>SA après (optionnel)</label><input type="number" name="saAfter" min="0" max="99" placeholder="ex. 52"></div>
+        <div><label>Résultat (optionnel)</label><input type="text" name="result" placeholder="P8 / 24"></div>
+        <div class="full"><label>Notes (ce qui s'est passé, contacts, erreurs)</label><textarea name="notes" rows="2"></textarea></div>
+        <div class="full"><button class="btn" type="submit">Enregistrer la session</button></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Nouveau relevé de ratings</h2>
+      <p class="small muted">À faire 1 à 2 fois par semaine, depuis Driver Profile / Rating.</p>
+      <form id="snapForm" class="form"></form>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h2>Historique des sessions</h2>
+    <div class="tablewrap"><table id="sessTable"></table></div>
+  </div>
+</section>
+
+<!-- MEDALS -->
+<section id="medals">
+  <div class="row" style="justify-content:space-between;margin-bottom:12px">
+    <h2 style="margin:0">Médailles de piste</h2>
+    <span class="weekprog" id="medalCount"></span>
+  </div>
+  <p class="muted small">Clique sur les étoiles pour mettre à jour. Les pistes non complètes remontent dans tes objectifs.</p>
+  <div class="tracks" id="trackGrid"></div>
+</section>
+
+<!-- PLAN -->
+<section id="plan" class="plan">
+  <div class="grid g2">
+    <div class="card">
+      <h2>Phase 1 · Reconstruire la SA</h2>
+      <p><b>Entrée :</b> SA &lt; 65. <b>Sortie :</b> SA ≥ 65 et tendance stable.</p>
+      <ul>
+        <li>Courses offline contre l'IA, grille pleine, 20–30 min. Règle le niveau de l'IA pour finir en milieu de peloton : tu passes ton temps en proximité sans contact, c'est ce qui construit le Trust.</li>
+        <li>Plus aucun serveur public sans exigence SA tant que la tendance n'est pas repartie à la hausse.</li>
+        <li>Hotlap pour les médailles manquantes en parallèle : ça ne coûte rien en SA.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Phase 2 · Ouvrir les Competition Servers</h2>
+      <p><b>Entrée :</b> SA 65–79. <b>Sortie :</b> SA ≥ 80 + 3 médailles sur les pistes de la rotation.</p>
+      <ul>
+        <li>Public uniquement sur serveurs filtrés, avec l'exigence SA la plus haute que tu peux rejoindre.</li>
+        <li>Objectif « zéro contact » sur des séries de sessions, pas la victoire.</li>
+        <li>LFM possible dès que tu es à l'aise : vise la propreté avant le résultat.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Phase 3 · Vitesse et Competition</h2>
+      <p><b>Entrée :</b> SA ≥ 80. <b>Sortie :</b> PC ≥ 60 et CP qui décolle.</p>
+      <ul>
+        <li>Special Events chaque semaine (Hotlap, Superpole, Hotstint).</li>
+        <li>Une course Competition Server par jour sur une piste où tu as 3 médailles.</li>
+        <li>Télémétrie : compare tes tours à une référence plus rapide, un virage à la fois.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Phase 4 · LFM et championnats</h2>
+      <p><b>Entrée :</b> SA ≥ 80, PC ≥ 60. <b>Cible :</b> splits du haut, puis équipe.</p>
+      <ul>
+        <li>LFM régulier, toujours sur la même voiture.</li>
+        <li>Un championnat sur The SimGrid ou une ligue : c'est là que les équipes regardent.</li>
+        <li>Endurance en équipe dès que possible : gestion de pneus, relais, régularité.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Règles de course pour protéger la SA</h2>
+      <ul>
+        <li><b>Tour 1 :</b> tu suis. Freine un poil plus tôt au premier virage, aucun plongeon.</li>
+        <li><b>Dépassement :</b> seulement si tu es à hauteur de la roue avant avant le point de corde. Sinon, tu restes derrière et tu prépares la sortie.</li>
+        <li><b>Défense :</b> un seul changement de trajectoire, et jamais au freinage.</li>
+        <li><b>Après une erreur :</b> tu rejoins la piste quand c'est dégagé, jamais en travers de la trajectoire.</li>
+        <li><b>Contact non fautif :</b> il pénalise quand même. Les zones chaudes (départ, premier virage, voitures plus lentes) se gèrent en laissant de la marge.</li>
+        <li><b>Mauvais lobby :</b> si le premier tour est un carnage, tu quittes. Une course perdue coûte moins qu'une SA qui chute.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Routine d'une session (60–90 min)</h2>
+      <ul>
+        <li>10 min d'échauffement sur la piste du jour, objectif tours propres.</li>
+        <li>Le bloc principal selon tes objectifs de la semaine.</li>
+        <li>5 min de bilan : contacts, sorties, SA après. Tu notes tout dans le Journal.</li>
+      </ul>
+      <h3 style="margin-top:14px">Matos</h3>
+      <ul>
+        <li>FOV calculé avec la vraie distance yeux-écran sur ton 27".</li>
+        <li>PC branché, mode Performance OMEN, GPU en mode dédié (pas hybride).</li>
+        <li>Prochaine upgrade conseillée : un écran 144 Hz ou plus.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- DATA -->
+<section id="data">
+  <div class="card">
+    <h2>Sauvegarde</h2>
+    <p class="muted small">Tes données restent dans ton navigateur. Exporte de temps en temps pour ne rien perdre, ou pour passer d'un appareil à l'autre.</p>
+    <div class="row">
+      <button class="btn" id="exportBtn">Exporter (JSON)</button>
+      <label class="btn ghost" style="margin:0;color:var(--text)">Importer<input type="file" id="importIn" accept=".json,application/json" hidden></label>
+      <button class="btn danger" id="resetBtn">Réinitialiser</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h2>Objectif de points</h2>
+    <div class="form" style="max-width:300px"><div><label>Total rating visé</label><input type="number" id="targetIn"></div></div>
+  </div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE='acc9000_v1';
+const TRACKS=[["Nürburgring",3],["Misano",2],["Paul Ricard",3],["Hungaroring",3],["Zolder",3],["Monza",3],["Silverstone",3],["Brands Hatch",3],["Spa-Francorchamps",3],["Barcelona",3],["Zandvoort",3],["Suzuka",1],["Laguna Seca",0],["Mount Panorama",0],["Kyalami",0],["Imola",0],["Snetterton",0],["Oulton Park",0],["Donington",0],["COTA",0],["Indianapolis",3],["Watkins Glen",0],["Valencia",1],["Red Bull Ring",2],["24h Nürburgring",1]];
+const KEYS=['TR','CN','CC','PC','SA','RC','CP'];
+const NAMES={TR:'Track Comp.',CN:'Consistency',CC:'Car Control',PC:'Pace',SA:'Safety',RC:'Racecraft',CP:'Competition'};
+const COLORS={TR:'#8cc4ff',CN:'#b48cff',CC:'#3ecf6e',PC:'#ff9f1c',SA:'#f5b301',RC:'#ff6b9a',CP:'#eceff3'};
+const TYPES={ai:'Offline vs IA',pubf:'Public filtré (SA requis)',pubo:'Public ouvert',comp:'Competition Server',lfm:'LFM',league:'Ligue / championnat',hotlap:'Special Event Hotlap/Superpole',hotstint:'Special Event Hotstint',practice:'Solo / médailles'};
+const MULTI=['ai','pubf','pubo','comp','lfm','league'];
+
+function seed(){return{v:1,target:9000,
+  snapshots:[{ts:Date.parse('2026-11-06T15:00:00'),date:'2026-11-06',TO:8224,TOT:82,TR:85,CN:85,CC:88,PC:27,SA:50,RC:74,CP:0}],
+  sessions:[],medals:Object.fromEntries(TRACKS),checks:{}}}
+let S;
+function load(){
+  try{const raw=localStorage.getItem(STORE);S=raw?JSON.parse(raw):seed();}catch(e){S=seed();}
+  normalize();
+}
+function normalize(){
+  if(!S.medals)S.medals=Object.fromEntries(TRACKS);
+  TRACKS.forEach(([t])=>{if(S.medals[t]==null)S.medals[t]=0});
+  S.checks=S.checks||{};S.sessions=S.sessions||[];S.target=S.target||9000;
+}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(S));}catch(e){}}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+const today=()=>new Date().toISOString().slice(0,10);
+function weekKey(d=new Date()){const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=x.getUTCDay()||7;x.setUTCDate(x.getUTCDate()+4-day);const y=new Date(Date.UTC(x.getUTCFullYear(),0,1));return x.getUTCFullYear()+'-W'+String(Math.ceil(((x-y)/864e5+1)/7)).padStart(2,'0')}
+
+/* ---------- derived data ---------- */
+const snaps=()=>[...S.snapshots].sort((a,b)=>a.ts-b.ts);
+const lastSnap=()=>snaps().at(-1);
+const prevSnap=()=>{const s=snaps();return s.length>1?s.at(-2):null};
+function saPoints(){
+  const pts=S.snapshots.map(s=>({ts:s.ts,date:s.date,v:s.SA}));
+  S.sessions.forEach(s=>{if(typeof s.saAfter==='number')pts.push({ts:s.ts,date:s.date,v:s.saAfter})});
+  return pts.sort((a,b)=>a.ts-b.ts);
+}
+function current(){const r={...lastSnap()};const p=saPoints().at(-1);if(p&&p.ts>r.ts){r.SA=p.v;r.saLive=true}return r}
+const medalsTotal=()=>Object.values(S.medals).reduce((a,b)=>a+b,0);
+const sessDesc=()=>[...S.sessions].sort((a,b)=>b.ts-a.ts);
+function cleanStreak(){let n=0;for(const s of sessDesc()){if(!MULTI.includes(s.type))continue;if(s.contacts===0)n++;else break}return n}
+function typeStats(){
+  const g={};S.sessions.forEach(s=>{if(typeof s.saDelta!=='number')return;(g[s.type]=g[s.type]||{n:0,sum:0,contacts:0});g[s.type].n++;g[s.type].sum+=s.saDelta;g[s.type].contacts+=s.contacts||0});
+  return Object.entries(g).map(([t,o])=>({type:t,n:o.n,avg:o.sum/o.n,c:o.contacts/o.n})).sort((a,b)=>b.avg-a.avg);
+}
+function saTrend(){const p=saPoints();if(p.length<2)return 0;const recent=p.slice(-6);return recent.at(-1).v-recent[0].v}
+function phase(r){
+  if(r.SA<65)return{n:1,name:'Reconstruire la Safety',goal:'Remonter au-dessus de 65 SA et arrêter la chute.',exit:{label:'SA → 65',val:r.SA,max:65}};
+  if(r.SA<80)return{n:2,name:'Ouvrir les Competition Servers',goal:'Atteindre 80 SA avec les médailles sur les pistes de la rotation.',exit:{label:'SA → 80',val:r.SA,max:80}};
+  if(r.PC<60||r.CP<40)return{n:3,name:'Vitesse et Competition',goal:'Monter ton Pace au-dessus de 60 et lancer ta CP.',exit:{label:'PC → 60',val:r.PC,max:60}};
+  return{n:4,name:'LFM et championnats',goal:'Résultats réguliers dans les splits du haut, puis un championnat.',exit:{label:'Total → '+S.target,val:r.TO,max:S.target}};
+}
+function projection(){
+  const s=snaps();if(s.length<2)return null;const a=s[0],b=s.at(-1);const days=(b.ts-a.ts)/864e5;const gain=b.TO-a.TO;
+  if(days<1||gain<=0)return null;const rate=gain/days;const left=S.target-b.TO;if(left<=0)return{done:true,rate};
+  return{rate,date:new Date(b.ts+left/rate*864e5)};
+}
+
+/* ---------- adaptive goals ---------- */
+function buildGoals(){
+  const r=current(),pv=prevSnap(),ph=phase(r),G=[];
+  const recent=sessDesc().filter(s=>MULTI.includes(s.type)).slice(0,6);
+  const avgC=recent.length?recent.reduce((a,s)=>a+(s.contacts||0),0)/recent.length:null;
+  const trend=saTrend(),ts=typeStats(),stat=t=>ts.find(x=>x.type===t);
+  const best=ts.filter(x=>x.n>=2&&x.avg>0)[0];
+  const pubo=stat('pubo');
+
+  if(trend<0||(pv&&r.SA<pv.SA))G.push({id:'sa-stop',p:1,title:'Pause sur les serveurs publics ouverts',
+    detail:'Uniquement offline contre l\'IA ou serveurs avec SA requis cette semaine.',
+    why:`Ta SA est en baisse (${trend>0?'+':''}${trend} sur tes derniers relevés).`+(pubo&&pubo.avg<0?` Les serveurs ouverts te coûtent en moyenne ${pubo.avg.toFixed(1)} SA par session.`:'')});
+  if(r.SA<80){
+    const n=r.SA<65?4:2;
+    G.push({id:'sa-ai',p:r.SA<65?1:2,title:`${n} courses offline contre l'IA (20–30 min, grille pleine)`,
+      detail:'Règle l\'IA pour finir en milieu de peloton. Le but est de rouler roue dans roue sans contact, pas de gagner.',
+      why:'Rouler près des autres sans contact construit le Trust, sans risque de te faire sortir par un humain.'});
+    if(r.SA>=50)G.push({id:'sa-filt',p:2,title:'En public : serveur avec SA requis le plus haut possible',
+      detail:`Choisis les serveurs dont l'exigence SA est proche de ton niveau (${r.SA}). Plus le serveur est filtré, plus la grille est propre.`,
+      why:'Les lobbies peu filtrés sont la première cause de contacts non fautifs.'});
+  }
+  if(best)G.push({id:'sa-best',p:2,title:`Fais plus de : ${TYPES[best.type]}`,detail:`C'est ce qui te rapporte le plus de SA (+${best.avg.toFixed(1)} en moyenne sur ${best.n} sessions).`,why:'Calculé à partir de ton journal.'});
+  if(avgC!==null&&avgC>=.5){
+    const st=cleanStreak();
+    G.push({id:'zero',p:1,title:`Série de 3 sessions à 0 contact (actuel : ${st}/3)`,
+      detail:'Tour 1 en mode suivi, aucun dépassement si tu n\'es pas à hauteur de la roue avant avant le point de corde.',
+      why:`Tu fais en moyenne ${avgC.toFixed(1)} contact(s) par session sur tes ${recent.length} dernières courses.`});
+  }
+  if(ph.n<=2)G.push({id:'lap1',p:2,title:'Règle du premier tour sur chaque course',detail:'Freine un peu plus tôt au premier virage, zéro plongeon, tu gardes ta trajectoire.',why:'Le départ concentre la majorité des contacts.'});
+
+  const miss=TRACKS.map(([t])=>t).filter(t=>S.medals[t]<3).sort((a,b)=>S.medals[b]-S.medals[a]);
+  if(miss.length){const pick=miss.slice(0,3);
+    G.push({id:'medals-'+pick.join('|'),p:ph.n<=2?2:3,title:`Médailles : ${pick.join(', ')}`,
+      detail:'Session solo, tours propres et réguliers jusqu\'à décrocher les 3 médailles sur chaque piste.',
+      why:`${medalsTotal()}/75 médailles. Chaque médaille fait monter ton TR et t'ouvre plus de serveurs.`});}
+
+  if(r.PC<60)G.push({id:'pace-se',p:ph.n>=3?1:3,title:'Special Event de la semaine (Hotlap + Superpole)',
+    detail:'Plusieurs runs sur la piste proposée. Vise une progression de rang, pas un tour parfait.',
+    why:`Pace à ${r.PC} : il ne monte qu'avec les Special Events et les courses officielles.`});
+  if(ph.n>=2)G.push({id:'telem',p:3,title:'1 session télémétrie',detail:'Compare un tour à une référence plus rapide. Travaille un seul virage, celui qui te coûte le plus.',why:'Le chrono se gagne là, plus qu\'en roulant au hasard.'});
+  if(r.SA>=80)G.push({id:'comp',p:1,title:'Competition Server : 1 course par jour',detail:'Uniquement sur une piste où tu as 3 médailles (obligatoire pour y entrer).',why:'Ta CP est à '+r.CP+' : c\'est le seul moyen de la monter.'});
+  if(r.SA>=70)G.push({id:'lfm',p:ph.n>=3?1:3,title:'LFM : 2 courses cette semaine',detail:'Même voiture à chaque fois. Objectif : finir propre dans ton split.',why:'C\'est l\'échelle de référence pour la suite.'});
+  if(r.SA>=70&&r.RC<80)G.push({id:'rc',p:3,title:'Duels propres',detail:'En course, prépare tes dépassements sur plusieurs virages au lieu de forcer au freinage.',why:`Racecraft à ${r.RC}.`});
+  if(pv&&(r.CN<pv.CN||r.CC<pv.CC))G.push({id:'cncc',p:2,title:'Session régularité : 15 tours dans 0,5 s',detail:'Sans chercher le chrono. Freinages et points de corde identiques à chaque tour.',why:'Consistency ou Car Control en baisse depuis ton dernier relevé.'});
+  if(ph.n===4)G.push({id:'league',p:1,title:'Inscris-toi à un championnat',detail:'The SimGrid ou une ligue : c\'est là que les équipes recrutent.',why:'Tu as le niveau de base pour passer à l\'étape suivante.'});
+  return{ph,goals:G.sort((a,b)=>a.p-b.p)};
+}
+
+/* ---------- render ---------- */
+let charts={};
+function renderDash(){
+  const r=current(),pv=prevSnap(),{ph}=buildGoals();
+  const pct=Math.min(100,Math.round(ph.exit.val/ph.exit.max*100));
+  $('#phaseCard').innerHTML=`<div class="tag">Phase ${ph.n} / 4</div><h2>${ph.name}</h2><p class="muted" style="margin:0">${ph.goal}</p>
+  <div class="row" style="justify-content:space-between;margin-top:10px"><span class="small">${ph.exit.label}</span><span class="small">${ph.exit.val} / ${ph.exit.max}</span></div><div class="bar"><i style="width:${pct}%"></i></div>`;
+  const pr=projection(),d=(k)=>pv?r[k]-pv[k]:0;
+  const delta=(v)=>v>0?`<span class="up">▲ ${v}</span>`:v<0?`<span class="down">▼ ${-v}</span>`:'<span class="flat">=</span>';
+  const toPct=Math.min(100,(r.TO/S.target)*100);
+  $('#kpis').innerHTML=`
+   <div class="card kpi"><div class="l">Total rating</div><div class="v">${r.TO.toLocaleString('fr-FR')}</div><div class="bar"><i style="width:${toPct}%"></i></div><div class="d muted">${(S.target-r.TO>0?(S.target-r.TO).toLocaleString('fr-FR')+' pts avant '+S.target:'Objectif atteint')}</div></div>
+   <div class="card kpi"><div class="l">Safety${r.saLive?' (dernière session)':''}</div><div class="v" style="color:${r.SA<65?'var(--bad)':r.SA<80?'var(--warn)':'var(--good)'}">${r.SA}</div><div class="d">${delta(saTrend())} tendance · 80 pour Competition</div></div>
+   <div class="card kpi"><div class="l">Médailles</div><div class="v">${medalsTotal()}<span class="muted" style="font-size:22px">/75</span></div><div class="bar"><i style="width:${medalsTotal()/75*100}%"></i></div></div>
+   <div class="card kpi"><div class="l">Projection ${S.target}</div><div class="v" style="font-size:28px;margin-top:6px">${pr?(pr.done?'Atteint':pr.date.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})):'—'}</div><div class="d muted">${pr?'≈ '+pr.rate.toFixed(1)+' pts / jour':'Ajoute un 2e relevé pour estimer'}</div></div>`;
+  $('#ratings').innerHTML=KEYS.map(k=>`<div class="rating"><span class="n">${NAMES[k]}</span><div class="bar" style="margin:0"><i style="width:${r[k]}%;background:${COLORS[k]}"></i></div><span class="val">${r[k]}</span></div>`).join('');
+  $('#snapInfo').textContent='Dernier relevé : '+new Date(lastSnap().ts).toLocaleDateString('fr-FR')+(pv?' · comparé au '+new Date(pv.ts).toLocaleDateString('fr-FR'):'');
+  const ts=typeStats();
+  $('#typeStats').innerHTML=ts.length?`<table><tr><th>Type</th><th>Sessions</th><th>Δ SA moy.</th><th>Contacts moy.</th></tr>${ts.map(x=>`<tr><td>${TYPES[x.type]}</td><td>${x.n}</td><td class="${x.avg>0?'up':x.avg<0?'down':'flat'}">${x.avg>0?'+':''}${x.avg.toFixed(1)}</td><td>${x.c.toFixed(1)}</td></tr>`).join('')}</table>`
+    :'<p class="muted">Renseigne « SA après » quand tu ajoutes une session : le site calculera quels types de sessions font monter ou baisser ta SA, et adaptera tes objectifs.</p>';
+  drawCharts();
+}
+function drawCharts(){
+  if(!window.Chart)return;
+  Chart.defaults.color='#8d949e';Chart.defaults.borderColor='#2c3036';Chart.defaults.font.family='Inter';
+  const sp=saPoints();
+  charts.sa&&charts.sa.destroy();
+  charts.sa=new Chart($('#saChart'),{type:'line',data:{labels:sp.map(p=>p.date.slice(5)),datasets:[
+    {label:'SA',data:sp.map(p=>p.v),borderColor:'#f5b301',backgroundColor:'rgba(245,179,1,.15)',fill:true,tension:.3,pointRadius:3},
+    {label:'Seuil Competition',data:sp.map(()=>80),borderColor:'#3ecf6e',borderDash:[6,4],pointRadius:0}]},
+    options:{maintainAspectRatio:false,scales:{y:{suggestedMin:30,suggestedMax:100}},plugins:{legend:{display:false}}}});
+  const s=snaps();
+  charts.all&&charts.all.destroy();
+  charts.all=new Chart($('#allChart'),{type:'line',data:{labels:s.map(x=>x.date.slice(5)),datasets:KEYS.map(k=>({label:k,data:s.map(x=>x[k]),borderColor:COLORS[k],tension:.3,pointRadius:3}))},
+    options:{maintainAspectRatio:false,scales:{y:{min:0,max:100}},plugins:{legend:{labels:{boxWidth:10}}}}});
+}
+function renderGoals(){
+  const {goals}=buildGoals(),wk=weekKey(),c=S.checks[wk]||{};
+  const done=goals.filter(g=>c[g.id]).length;
+  $('#weekProg').textContent=`Semaine ${wk.split('-W')[1]} · ${done}/${goals.length}`;
+  const pl={1:['p1','Priorité'],2:['p2','Important'],3:['p3','Bonus']};
+  $('#goalList').innerHTML=goals.map(g=>`<div class="goal ${c[g.id]?'done':''}"><input type="checkbox" data-g="${esc(g.id)}" ${c[g.id]?'checked':''} aria-label="Fait">
+   <div><h3><span class="pill ${pl[g.p][0]}">${pl[g.p][1]}</span>${esc(g.title)}</h3><div>${esc(g.detail)}</div><div class="why">Pourquoi : ${esc(g.why)}</div></div></div>`).join('');
+  document.querySelectorAll('#goalList input').forEach(i=>i.onchange=()=>{(S.checks[wk]=S.checks[wk]||{})[i.dataset.g]=i.checked;save();renderGoals()});
+}
+function renderLog(){
+  $('#sessTable').innerHTML=S.sessions.length?`<tr><th>Date</th><th>Type</th><th>Circuit</th><th>Contacts</th><th>SA</th><th>Notes</th><th></th></tr>`+
+   sessDesc().map(s=>`<tr><td>${esc(s.date)}</td><td>${esc(TYPES[s.type])}</td><td>${esc(s.track)}</td><td>${s.contacts}${s.offs?' · '+s.offs+' off':''}</td>
+   <td>${typeof s.saAfter==='number'?s.saAfter+(typeof s.saDelta==='number'?` <span class="${s.saDelta>0?'up':s.saDelta<0?'down':'flat'}">(${s.saDelta>0?'+':''}${s.saDelta})</span>`:''):'—'}</td>
+   <td class="small">${esc(s.result)} ${esc(s.notes)}</td><td><button class="btn ghost" style="padding:4px 10px" data-del="${s.ts}">✕</button></td></tr>`).join('')
+   :'<tr><td class="muted">Aucune session pour l\'instant.</td></tr>';
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(!confirm('Supprimer cette session ?'))return;S.sessions=S.sessions.filter(s=>String(s.ts)!==b.dataset.del);save();renderAll()});
+  const r=lastSnap();
+  $('#snapForm').innerHTML=`<div><label>Date</label><input type="date" name="date" value="${today()}"></div>
+   <div><label>Total points</label><input type="number" name="TO" value="${r.TO}" required></div>
+   <div><label>Total (note)</label><input type="number" name="TOT" value="${r.TOT??''}"></div>`+
+   KEYS.map(k=>`<div><label>${NAMES[k]} (${k})</label><input type="number" name="${k}" min="0" max="99" value="${r[k]}" required></div>`).join('')+
+   `<div class="full"><button class="btn" type="submit">Enregistrer le relevé</button></div>`;
+}
+function renderMedals(){
+  $('#medalCount').textContent=medalsTotal()+' / 75';
+  $('#trackGrid').innerHTML=TRACKS.map(([t])=>{const m=S.medals[t];return`<div class="track ${m===3?'full':''}"><span>${esc(t)}</span><span class="stars">${[1,2,3].map(n=>`<button data-t="${esc(t)}" data-n="${n}" class="${n<=m?'on':''}" aria-label="${n} médaille(s)">★</button>`).join('')}</span></div>`}).join('');
+  document.querySelectorAll('.stars button').forEach(b=>b.onclick=()=>{const t=b.dataset.t,n=+b.dataset.n;S.medals[t]=S.medals[t]===n?n-1:n;save();renderMedals()});
+}
+function renderAll(){renderDash();renderGoals();renderLog();renderMedals();$('#targetIn').value=S.target}
+
+/* ---------- events ---------- */
+$('#nav').onclick=e=>{const b=e.target.closest('button');if(!b)return;document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.t));if(b.dataset.t==='dash')drawCharts();if(b.dataset.t==='goals')renderGoals();if(b.dataset.t==='medals')renderMedals()};
+$('#typeSel').innerHTML=Object.entries(TYPES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+$('#trackSel').innerHTML=TRACKS.map(([t])=>`<option>${esc(t)}</option>`).join('');
+$('#sessForm').elements.date.value=today();
+$('#sessForm').onsubmit=e=>{
+  e.preventDefault();const f=new FormData(e.target);const saRaw=f.get('saAfter');
+  const s={ts:Date.now(),date:f.get('date'),type:f.get('type'),track:f.get('track'),dur:+f.get('dur')||0,contacts:+f.get('contacts')||0,offs:+f.get('offs')||0,result:f.get('result'),notes:f.get('notes')};
+  if(saRaw!==''&&saRaw!=null){s.saAfter=+saRaw;s.saDelta=s.saAfter-current().SA}
+  S.sessions.push(s);save();e.target.reset();e.target.elements.date.value=today();e.target.elements.dur.value=30;e.target.elements.contacts.value=0;e.target.elements.offs.value=0;
+  renderAll();toast('Session enregistrée · objectifs mis à jour');
+};
+$('#snapForm').onsubmit=e=>{
+  e.preventDefault();const f=new FormData(e.target);const s={ts:Date.now(),date:f.get('date')||today(),TO:+f.get('TO'),TOT:+f.get('TOT')||null};
+  KEYS.forEach(k=>s[k]=+f.get(k));S.snapshots.push(s);save();renderAll();toast('Relevé enregistré');
+};
+$('#exportBtn').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));a.download='acc9000-'+today()+'.json';a.click()};
+$('#importIn').onchange=e=>{const file=e.target.files[0];if(!file)return;file.text().then(t=>{try{const d=JSON.parse(t);if(!Array.isArray(d.snapshots)||!d.snapshots.length)throw 0;S=d;normalize();save();renderAll();toast('Données importées')}catch(_){toast('Fichier invalide')}})};
+$('#resetBtn').onclick=()=>{if(confirm('Tout effacer et revenir aux données de départ ?')){S=seed();save();renderAll()}};
+$('#targetIn').onchange=e=>{S.target=+e.target.value||9000;save();renderAll()};
+
+load();renderAll();
+</script>
+</body>
+</html>
