@@ -309,7 +309,7 @@ code{background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-ra
       <div class="card"><span class="tag phase">Phase 2</span><h2 style="margin-top:10px">Ouvrir les Competition Servers</h2><p class="muted small" style="margin-top:4px">SA 65–79 · sortie à 80 avec les médailles</p>
         <ul><li>Public uniquement sur serveurs filtrés, exigence SA la plus haute possible.</li><li>Objectif zéro contact en séries de sessions.</li><li>LFM possible dès que tu es à l'aise, la propreté avant le résultat.</li></ul></div>
       <div class="card"><span class="tag phase">Phase 3</span><h2 style="margin-top:10px">Vitesse et Competition</h2><p class="muted small" style="margin-top:4px">SA ≥ 80 · sortie à PC 60 et CP lancée</p>
-        <ul><li>Special Events chaque semaine (Hotlap, Superpole, Hotstint).</li><li>Une course Competition Server par jour sur une piste à 3 médailles.</li><li>Télémétrie contre une référence, un virage à la fois.</li></ul></div>
+        <ul><li>Special Events chaque semaine (Hotlap, Superpole, Hotstint). Pace ≈ 90 × (1 − rang ÷ participants) : top 33 % ≈ 60 de Pace.</li><li>Les serveurs publics normaux ne font pas monter le Pace.</li><li>Une course Competition Server par jour sur une piste à 3 médailles.</li><li>Télémétrie contre une référence, un virage à la fois.</li></ul></div>
       <div class="card"><span class="tag phase">Phase 4</span><h2 style="margin-top:10px">LFM et championnats</h2><p class="muted small" style="margin-top:4px">SA ≥ 80, PC ≥ 60 · cible : splits du haut puis équipe</p>
         <ul><li>LFM régulier, toujours la même voiture.</li><li>Un championnat The SimGrid ou une ligue : c'est là que les équipes recrutent.</li><li>Endurance en équipe : pneus, relais, régularité.</li></ul></div>
       <div class="card"><h2>Règles pour protéger ta Safety</h2>
@@ -470,6 +470,11 @@ const todaySess=()=>S.sessions.filter(s=>s.date===today());
 function contactCauses(n=10){const L=sessDesc().filter(s=>MULTI.includes(s.type)&&Array.isArray(s.clog)).slice(0,n);const c={};let tot=0;L.forEach(s=>s.clog.forEach(k=>{c[k]=(c[k]||0)+1;tot++}));
   const top=Object.entries(c).filter(([k])=>k!=='other').sort((a,b)=>b[1]-a[1])[0];return{c,tot,n:L.length,dom:top&&tot>=3&&top[1]/tot>=.4?top[0]:null,share:top&&tot?top[1]/tot:0}}
 function causeStreak(k){let n=0;for(const s of sessDesc()){if(!MULTI.includes(s.type)||!Array.isArray(s.clog))continue;if(s.clog.includes(k))break;n++}return n}
+const SE=['hotlap','hotstint'];
+const pcFromRank=(r,n)=>Math.max(0,Math.round(90*(1-r/n)));
+const topFor=pc=>Math.max(1,Math.round((1-pc/90)*100));
+function seStats(){const L=sessDesc().filter(s=>SE.includes(s.type)&&s.rank&&s.of);const best=L.reduce((b,s)=>!b||s.rank/s.of<b.rank/b.of?s:b,null);return{n:L.length,last:L[0]||null,best}}
+function seTarget(pc){const t=Math.min(90,Math.max(pc+15,40));return{pc:t,top:topFor(t)}}
 function typeStats(){const g={};S.sessions.forEach(s=>{if(typeof s.saDelta!=='number')return;const o=g[s.type]=g[s.type]||{n:0,sum:0,c:0};o.n++;o.sum+=s.saDelta;o.c+=s.contacts||0});return Object.entries(g).map(([t,o])=>({type:t,n:o.n,avg:o.sum/o.n,c:o.c/o.n})).sort((a,b)=>b.avg-a.avg)}
 function saTrend(){const p=saPoints();if(p.length<2)return 0;const r=p.slice(-6);return r.at(-1).v-r[0].v}
 function phase(r){
@@ -494,9 +499,11 @@ function templates(){
   if(r.SA>=50&&r.SA<80)T.push({id:'pubf',type:'pubf',title:'Course publique filtrée',dur:45,boosts:['SA','RC','CN'],
     score:r.SA>=65?82:45,why:`Serveurs avec exigence SA proche de ton niveau (${r.SA}) : grilles plus propres, vrai trafic humain.`,
     steps:['Multijoueur, filtre sur l\'exigence Safety','Prends l\'exigence la plus haute que tu peux rejoindre','Premier tour prudent','Lobby chaotique au tour 1 : tu quittes']});
+  {const ss=seStats(),tg=seTarget(r.PC);
   T.push({id:'se',type:'hotlap',title:'Special Event de la semaine',dur:30,boosts:['PC'],
-    score:r.PC<60?(ph.n>=3?90:55):25,why:`Ton Pace (${r.PC}) ne monte qu'avec les Special Events et les courses officielles.`,
-    steps:['Menu Special Events, Hotlap de la semaine','Plusieurs runs, garde ton meilleur','Superpole si dispo','Note ton rang dans les notes']});
+    score:r.PC<60?(ph.n>=3?90:r.PC<40?72:55):25,
+    why:`Seul moyen de monter ton Pace (${r.PC}) avant les Competition Servers. C'est un classement en solo : zéro risque pour ta Safety. Vise le top ${tg.top} % pour ≈ ${tg.pc} de Pace.`,
+    steps:['Ouvre le classement de l\'event : note le temps du top '+tg.top+' %','10 min d\'échauffement en entraînement, même piste et même voiture','Seul ton meilleur tour valide compte : enchaîne les runs','Zéro coupe de piste, un tour invalide ne compte pas','À la fin, note ton rang et le nombre de participants']})}
   const cnDrop=pv&&(r.CN<pv.CN||r.CC<pv.CC);
   T.push({id:'cn',type:'practice',title:'Régularité : 15 tours',dur:30,boosts:['CN','CC'],
     score:cnDrop?70:32,why:cnDrop?'Consistency ou Car Control en baisse depuis ton dernier relevé.':'Freinages et cordes identiques à chaque tour : la base du chrono en course.',
@@ -567,8 +574,9 @@ function setupFor(t,r){
     setup:[['Mode','Hotlap ou Entraînement, piste vide'],['Circuit',t.track],C,['Météo','Sec, en journée'],['Objectif','Tours propres et réguliers jusqu\'aux 3 médailles']]};
   if(t.type==='pubf')return{reason:'Les serveurs filtrés regroupent des pilotes avec une Safety proche de la tienne : moins de contacts subis.',
     setup:[['Mode','Multijoueur, serveurs publics'],['Filtre','Safety requise la plus haute que tu peux rejoindre',`Ton niveau : ${r.SA}`],['Circuit','Une piste où tu as 3 médailles','Par exemple '+fam],C,['Départ','Celui de ta qualif : qualif propre, sans prendre de risque']]};
-  if(t.type==='hotlap')return{reason:'Le Pace ne bouge qu\'avec les Special Events et les courses officielles.',
-    setup:[['Mode','Special Events, Hotlap de la semaine'],['Circuit et voiture','Imposés par l\'événement'],['Tentatives','Au moins 5 runs']]};
+  if(SE.includes(t.type)){const ss=seStats(),tg=seTarget(r.PC);
+    return{reason:`ACC calcule ton Pace sur ton classement dans les events publics : en gros, Pace ≈ 90 × (1 − rang ÷ participants). Ton meilleur ${ss.best?`ici : rang ${ss.best.rank.toLocaleString('fr-FR')} / ${ss.best.of.toLocaleString('fr-FR')} (top ${Math.round(ss.best.rank/ss.best.of*100)} %)`:'dans le jeu : top 70 % (27 de Pace)'}. Les serveurs publics normaux ne comptent pas pour le Pace.`,
+    setup:[['Mode','Special Events : Hotlap, Superpole ou Hotstint de la semaine'],['Circuit et voiture','Imposés par l\'event'],['Objectif',`Top ${tg.top} %`,`Environ ${tg.pc} de Pace. Pour 60 de Pace : top ${topFor(60)} %`],['Tentatives','Au moins 5 runs, garde ton meilleur tour'],['Avant','Regarde le tour d\'un pilote du top 10 % dans le classement']]}}
   if(t.id==='cn')return{track:fam,trackFree:true,reason:'Sur une piste maîtrisée, tu travailles uniquement la répétition.',
     setup:[['Mode','Entraînement'],['Circuit',fam,'','track'],C,['Tours','15 d\'affilée'],['Cible','Écart max de 0,5 s entre tes tours']]};
   if(t.id==='tel')return{track:fam,trackFree:true,reason:'Une piste connue, pour que l\'écart avec la référence vienne de ta technique.',
@@ -583,7 +591,7 @@ function needs(){
   const r=current(),T=templates(),m=medalsTotal();
   const L=[
     {k:'SA',val:r.SA,max:80,w:r.SA<65?2.2:1.6,why:'80 ouvre les Competition Servers'},
-    {k:'PC',val:r.PC,max:60,w:1.2,why:'60 pour viser les splits du haut'},
+    {k:'PC',val:r.PC,max:60,w:1.2,why:'Special Events en solo, sans risque pour ta Safety'},
     {k:'TR',val:m,max:75,w:.9,why:'médailles de piste',unit:'médailles'},
     {k:'RC',val:r.RC,max:85,w:1,why:'duels et dépassements propres'},
     {k:'CN',val:r.CN,max:90,w:.8,why:'régularité tour après tour'},
@@ -613,7 +621,7 @@ function buildGoals(){
   if(!S.weekPick[wk])S.weekPick[wk]=missingTracks().slice(0,3);
   const pk=S.weekPick[wk].filter(t=>!S.noTracks[t]);
   if(pk.length)G.push({id:'medals',p:ph.n<=2?2:3,title:'Médailles : '+pk.join(', '),detail:'Les 3 médailles sur chaque piste.',why:`${medalsTotal()}/75 médailles au total.`,prog:pk.filter(t=>S.medals[t]===3).length,n:pk.length});
-  if(r.PC<60)G.push({id:'pace-se',p:ph.n>=3?1:3,title:'Special Event de la semaine',detail:'Hotlap et Superpole, plusieurs runs.',why:`Pace à ${r.PC}.`,prog:cnt(s=>s.type==='hotlap'),n:1});
+  if(r.PC<60){const tg=seTarget(r.PC);G.push({id:'pace-se',p:ph.n>=3?1:r.PC<40?2:3,title:`Special Event : top ${tg.top} %`,detail:`Environ ${tg.pc} de Pace. Classement en solo, aucun risque pour ta Safety.`,why:`Pace à ${r.PC}. Il ne monte qu'avec les Special Events et les Competition Servers, pas avec les serveurs publics normaux.`,prog:W.filter(s=>SE.includes(s.type)&&s.rank&&s.of&&s.rank/s.of*100<=tg.top).length,n:1})}
   if(r.SA>=80)G.push({id:'comp',p:1,title:'5 courses en Competition Server',detail:'Sur des pistes où tu as 3 médailles.',why:`Competition à ${r.CP}.`,prog:cnt(s=>s.type==='comp'),n:5});
   if(r.SA>=70)G.push({id:'lfm',p:ph.n>=3?1:3,title:'2 courses LFM',detail:'Même voiture, finir propre.',why:'Ton classement LFM compte pour la suite.',prog:cnt(s=>s.type==='lfm'),n:2});
   if(pv&&(r.CN<pv.CN||r.CC<pv.CC))G.push({id:'cncc',p:2,title:'Une session régularité',detail:'15 tours dans 0,5 s.',why:'Consistency ou Car Control en baisse.',prog:cnt(s=>s.tplId==='cn'),n:1});
@@ -830,6 +838,10 @@ function renderFinish(el){
            <div><label class="f">Arrivée</label><input type="number" id="fFinish" min="1" placeholder="P"></div>
            <div><label class="f">Voitures</label><input type="number" id="fGrid" min="1" value="${pre.grid??''}"></div></div>
            <p class="hint" id="posHint">Départ et arrivée servent à régler l'IA et ta position de départ la prochaine fois.</p></div>
+         <div class="full" id="rankBox"><div class="form" style="grid-template-columns:1fr 1fr">
+           <div><label class="f">Ton rang dans l'event</label><input type="number" id="fRank" min="1" placeholder="ex. 4200"></div>
+           <div><label class="f">Participants</label><input type="number" id="fOf" min="1" placeholder="ex. 9086"></div></div>
+           <p class="hint" id="rankHint">Dans ACC : Special Events, classement. Sert à estimer ton Pace.</p></div>
          <div id="resBox"><label class="f">Résultat</label><input id="fResult" placeholder="ex. rang 1240 / 9000"></div>
          <div class="full"><label class="f">Ressenti</label><div class="seg" id="fFeel">${['Galère','Moyen','Correct','Bien','Top'].map((l,i)=>`<button type="button" data-v="${i+1}" class="${i===2?'on':''}">${l}</button>`).join('')}</div></div>
          <div class="full"><label class="f">Médailles sur ce circuit</label><div class="seg" id="fMedals"></div></div>
@@ -848,7 +860,9 @@ function renderFinish(el){
   const seg=(id)=>{$(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))})};
   const medalSeg=()=>{const t=$('#fTrack').value,m=S.medals[t];$('#fMedals').innerHTML=[0,1,2,3].map(n=>`<button type="button" data-v="${n}" class="${n===m?'on':''}">${n} ★</button>`).join('');seg('#fMedals')};
   seg('#fFeel');medalSeg();$('#fTrack').onchange=medalSeg;
-  const posVis=()=>{const m=MULTI.includes($('#fType').value);$('#posBox').style.display=m?'':'none';$('#resBox').style.display=m?'none':''};posVis();$('#fType').onchange=posVis;
+  const posVis=()=>{const t=$('#fType').value,m=MULTI.includes(t),se=SE.includes(t);$('#posBox').style.display=m?'':'none';$('#rankBox').style.display=se?'':'none';$('#resBox').style.display=m||se?'none':''};posVis();$('#fType').onchange=posVis;
+  const rankHint=()=>{const rk=+$('#fRank').value,of=+$('#fOf').value;$('#rankHint').innerHTML=rk&&of&&rk<=of?`<b>Top ${Math.max(1,Math.round(rk/of*100))} %</b> · ≈ ${pcFromRank(rk,of)} de Pace (estimation)${pcFromRank(rk,of)>r.PC?' <span class="up">mieux que ton Pace actuel</span>':''}`:'Dans ACC : Special Events, classement. Sert à estimer ton Pace.'};
+  ['#fRank','#fOf'].forEach(id=>$(id).oninput=rankHint);
   const posHint=()=>{const s=+$('#fStart').value,f=+$('#fFinish').value;$('#posHint').innerHTML=s&&f?`<b class="${s-f>0?'up':s-f<0?'down':'flat'}">${s-f>0?'+':''}${s-f} place${Math.abs(s-f)>1?'s':''}</b> · P${s} → P${f}`:'Départ et arrivée servent à régler l\'IA et ta position de départ la prochaine fois.'};
   ['#fStart','#fFinish'].forEach(id=>$(id).oninput=posHint);
   $('#fAll').onchange=e=>$('#allBox').style.display=e.target.checked?'':'none';
@@ -864,6 +878,7 @@ function finishSession(){
     feel:+($('#fFeel .on')||{}).dataset?.v||3,notes:$('#fNotes').value.trim(),boosts:a.boosts,
     stepsDone:a.steps.filter(x=>x.done).length,stepsTotal:a.steps.length,setup:a.setup||[],tplId:a.tplId||null,clog:(a.clog||[]).slice(0,Math.max(0,num('#fContacts')??99))};
   if(MULTI.includes(s.type)){const st=num('#fStart'),fi=num('#fFinish'),gr=num('#fGrid');if(fi){s.finish=fi;if(st)s.start=st;if(gr)s.grid=gr;s.result=`P${fi}${gr?' / '+gr:''}`}else s.result=''}
+  if(SE.includes(s.type)){const rk=num('#fRank'),of=num('#fOf');if(rk&&of&&rk<=of){s.rank=rk;s.of=of;s.pcEst=pcFromRank(rk,of);s.result=`rang ${rk} / ${of}`}}
   if(sa!==null){s.saAfter=sa;s.saDelta=sa-before.SA}
   S.sessions.push(s);
   const m=+(($('#fMedals .on')||{}).dataset?.v??S.medals[track]),mGain=m-S.medals[track];S.medals[track]=m;
@@ -874,8 +889,9 @@ function finishSession(){
 function renderSummary(el){
   const {s,mGain,phBefore,toDelta}=summary,next=templates()[0],phNow=phase(current());
   const topCause=(()=>{const c={};(s.clog||[]).forEach(k=>c[k]=(c[k]||0)+1);const t=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];return t?CAUSES[t[0]].toLowerCase():''})();
-  const d=typeof s.saDelta==='number'?s.saDelta:null;
+  const d=typeof s.saDelta==='number'?s.saDelta:null;const seLine=s.pcEst!=null?`<div class="levelup" style="border-color:var(--primary-line);background:var(--primary-soft);color:#cfe0ff">${ico('bolt')}<div><b>Top ${Math.max(1,Math.round(s.rank/s.of*100))} % · ≈ ${s.pcEst} de Pace</b><p class="small" style="margin-top:2px">${s.pcEst>current().PC?'Mieux que ton Pace actuel ('+current().PC+') : il devrait monter. Note-le au prochain relevé.':'Ton Pace garde ton meilleur résultat ('+current().PC+'). Vise le top '+seTarget(current().PC).top+' %.'}</p></div></div>`:'';
   el.innerHTML=`<div class="hero" style="text-align:center"><div class="eyebrow">Session enregistrée</div><h2>${esc(s.title)}</h2><p style="margin:0 auto">${esc(TYPES[s.type])} · ${esc(s.track)} · ${s.dur} min${toDelta!=null?` · total ${sign(toDelta)} points`:''}</p></div>
+   ${seLine}
    ${phNow.n>phBefore?`<div class="levelup">${ico('trophy')}<div><b>Phase ${phNow.n} débloquée : ${esc(phNow.name)}</b><p class="small" style="margin-top:2px">${esc(phNow.goal)} Tes recommandations changent dès maintenant.</p></div></div>`:''}
    <div class="grid g4" style="margin-top:16px">
      <div class="card kpi"><div class="l">Safety</div><div class="v num ${d==null?'':d>0?'up':d<0?'down':'flat'}">${d==null?'—':sign(d)}</div><div class="d">${s.saAfter!=null?'Maintenant à '+s.saAfter:'Non renseignée'}</div></div>
@@ -945,7 +961,7 @@ function drawCharts(){
 
 /* ================= HISTORY ================= */
 function histHTML(s){const d=typeof s.saDelta==='number'?s.saDelta:null;
-  return`<div class="hist"><span class="ico">${ico(TYPE_ICON[s.type]||'route')}</span><div><b>${esc(s.title||TYPES[s.type])}</b><div class="sub">${fmtDate(s.date)} · ${esc(s.track)} · ${s.dur||0} min · ${s.contacts} contact${s.contacts>1?'s':''}${s.finish&&s.start?` · P${s.start} → P${s.finish}${s.grid?' / '+s.grid:''} (${sign(s.start-s.finish)})`:s.result?' · '+esc(s.result):''}</div>${setupLine(s.setup)&&s.type==='ai'?`<div class="sub" style="color:#a8c7ff">${esc(setupLine(s.setup).split(' · ').slice(1).join(' · '))}</div>`:''}</div>
+  return`<div class="hist"><span class="ico">${ico(TYPE_ICON[s.type]||'route')}</span><div><b>${esc(s.title||TYPES[s.type])}</b><div class="sub">${fmtDate(s.date)} · ${esc(s.track)} · ${s.dur||0} min · ${s.contacts} contact${s.contacts>1?'s':''}${s.rank&&s.of?` · top ${Math.max(1,Math.round(s.rank/s.of*100))} % (≈ ${s.pcEst} PC)`:''}${s.finish&&s.start?` · P${s.start} → P${s.finish}${s.grid?' / '+s.grid:''} (${sign(s.start-s.finish)})`:s.result&&!s.rank?' · '+esc(s.result):''}</div>${setupLine(s.setup)&&s.type==='ai'?`<div class="sub" style="color:#a8c7ff">${esc(setupLine(s.setup).split(' · ').slice(1).join(' · '))}</div>`:''}</div>
    <div class="delta ${d==null?'flat':d>0?'up':d<0?'down':'flat'}">${d==null?'—':sign(d)+' SA'}<div class="small faint" style="font-weight:500">${s.saAfter!=null?'SA '+s.saAfter:''}</div></div>
    ${s.notes||page==='history'?`<div class="note" ${s.notes?'':'style="display:none"'}>${esc(s.notes)}</div>`:''}
    ${page==='history'?`<div style="grid-column:1/-1;text-align:right"><button class="btn btn-ghost btn-sm" data-del="${s.ts}">${ico('trash')}Supprimer</button></div>`:''}</div>`}
