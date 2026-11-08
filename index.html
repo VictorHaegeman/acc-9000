@@ -483,7 +483,19 @@ function phase(r){
   if(r.PC<60||r.CP<40)return{n:3,name:'Vitesse et Competition',goal:'Monter ton Pace au-dessus de 60 et lancer ta CP.',exit:{label:'Pace',val:r.PC,max:60}};
   return{n:4,name:'LFM et championnats',goal:'Résultats réguliers dans les splits du haut, puis un championnat.',exit:{label:'Total',val:r.TO,max:S.target}};
 }
-function projection(){const s=snaps();if(s.length<2)return null;const a=s[0],b=s.at(-1),days=(b.ts-a.ts)/864e5,gain=b.TO-a.TO;if(days<1||gain<=0)return null;const rate=gain/days,left=S.target-b.TO;if(left<=0)return{done:true,rate};return{rate,date:new Date(b.ts+left/rate*864e5)}}
+function projection(){const s=snaps().filter(x=>x.TO>0);if(s.length<2)return{need:true};
+  const b=s.at(-1),prevMax=Math.max(...s.slice(0,-1).map(x=>x.TO));
+  if(b.TO<prevMax-300)return{suspect:true,last:b,prevMax};
+  const a=s.find(x=>b.ts-x.ts<=14*864e5)||s[0],days=(b.ts-a.ts)/864e5,gain=b.TO-a.TO;
+  if(days<.5)return{wait:true};if(gain<=0)return{flat:true};
+  const rate=gain/days,left=S.target-b.TO;if(left<=0)return{done:true,rate};return{ok:true,rate,date:new Date(b.ts+left/rate*864e5)}}
+function projKPI(pr){const t=S.target.toLocaleString('fr-FR');
+  if(pr.suspect)return{v:'<span class="down">À vérifier</span>',d:`Ton total est passé de ${pr.prevMax.toLocaleString('fr-FR')} à ${pr.last.TO.toLocaleString('fr-FR')}. Faute de frappe ? <a href="#/progress">Corrige le relevé</a>`};
+  if(pr.done)return{v:'Atteint',d:t+' points dépassés'};
+  if(pr.ok)return{v:pr.date.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),d:'≈ '+Math.round(pr.rate)+' points par jour, sur tes 14 derniers jours'};
+  if(pr.flat)return{v:'—',d:'Ton total n\'a pas monté récemment'};
+  if(pr.wait)return{v:'—',d:'Disponible après un relevé un autre jour'};
+  return{v:'—',d:'Disponible après ton 2e relevé'}}
 
 /* ================= recommended sessions ================= */
 function templates(){
@@ -690,7 +702,7 @@ function renderHome(){
      <div class="card kpi"><div class="l">${ico('shield')}Safety${r.saLive?' · dernière session':''}</div><div class="v num" style="color:${saCol}">${r.SA}<small> / 80</small></div><div class="meter"><i style="width:${Math.min(100,r.SA/80*100)}%;background:${saCol}"></i></div><div class="d">80 pour les Competition Servers</div></div>
      <div class="card kpi"><div class="l">${ico('chart')}Total rating</div><div class="v num">${r.TO.toLocaleString('fr-FR')}</div><div class="meter"><i style="width:${Math.min(100,r.TO/S.target*100)}%"></i></div><div class="d">${S.target-r.TO>0?(S.target-r.TO).toLocaleString('fr-FR')+' points avant '+S.target.toLocaleString('fr-FR'):'Objectif atteint'}</div></div>
      <div class="card kpi"><div class="l">${ico('star')}Médailles</div><div class="v num">${medalsTotal()}<small> / 75</small></div><div class="meter"><i style="width:${medalsTotal()/75*100}%;background:var(--warn)"></i></div><div class="d">${missingTracks().length} pistes incomplètes</div></div>
-     <div class="card kpi"><div class="l">${ico('flag')}Projection ${S.target.toLocaleString('fr-FR')}</div><div class="v num" style="font-size:30px;margin-top:10px">${pr?(pr.done?'Atteint':pr.date.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})):'—'}</div><div class="d">${pr?'≈ '+pr.rate.toFixed(1)+' points par jour':'Disponible après ton 2e relevé'}</div></div>
+     <div class="card kpi"><div class="l">${ico('flag')}Projection ${S.target.toLocaleString('fr-FR')}</div><div class="v num" style="font-size:30px;margin-top:10px">${projKPI(pr).v}</div><div class="d">${projKPI(pr).d}</div></div>
    </div>
    <div class="grid g2" style="margin-top:16px">
      <div class="card"><div class="card-h"><div><h2>${ico('target')}Cette semaine</h2><p class="small muted" style="margin-top:2px">${(()=>{const W=weekSess(),m=W.reduce((x,s)=>x+(s.dur||0),0);return W.length+' session'+(W.length>1?'s':'')+' · '+m+' min de roulage'})()}</p></div><a class="btn btn-ghost btn-sm" href="#/goals">Tout voir</a></div><div id="homeGoals">${goals.slice(0,4).map(g=>goalHTML(g,true)).join('')}</div></div>
@@ -922,14 +934,14 @@ function withChart(cb){if(window.Chart)return cb();if(chartLoading)return;chartL
 function renderProgress(){
   const r=current(),pv=prevSnap(),ts=typeStats(),pr=projection(),cc=contactCauses();
   $('#page-progress').innerHTML=`<div class="phead"><div><h1>Progression</h1><p>Tes ratings, ta Safety dans le temps et ce qui la fait bouger.</p></div><button class="btn btn-secondary" id="newSnap">${ico('plus')}Nouveau relevé</button></div>
-   <div class="card" id="snapCard" style="display:none;margin-bottom:16px"><h2 style="margin-bottom:14px">Nouveau relevé de ratings</h2><div class="form">
+   <div class="card" id="snapCard" style="display:none;margin-bottom:16px"><h2 style="margin-bottom:14px" id="snapTitle">Nouveau relevé de ratings</h2><div class="form">
      <div><label class="f">Date</label><input type="date" id="s-date" value="${today()}"></div><div><label class="f">Total points</label><input type="number" id="s-TO" value="${r.TO}"></div>
      ${KEYS.map(k=>`<div><label class="f">${NAMES[k]}</label><input type="number" id="s-${k}" min="0" max="99" value="${r[k]}"></div>`).join('')}
      <div class="full row"><button class="btn btn-primary" id="snapSave">Enregistrer</button><button class="btn btn-ghost" id="snapCancel">Annuler</button></div></div></div>
    <div class="grid g2">
      <div class="card"><div class="card-h"><h2>Ratings</h2><span class="small muted">${pv?'vs '+fmtDate(pv.date):''}</span></div>
        ${KEYS.map(k=>{const d=pv?r[k]-pv[k]:0;return`<div class="rating"><span class="n">${NAMES[k]}</span><div class="meter" style="margin:0"><i style="width:${r[k]}%;background:${COLORS[k]}"></i></div><span class="val num">${r[k]}${d?`<span class="small ${d>0?'up':'down'}" style="font-family:Inter;font-weight:600;font-size:11px;display:block;line-height:1">${sign(d)}</span>`:''}</span></div>`}).join('')}
-       <p class="small muted" style="margin-top:10px">Total : <b>${r.TO.toLocaleString('fr-FR')}</b> points${pr&&!pr.done?' · projection '+S.target.toLocaleString('fr-FR')+' le '+pr.date.toLocaleDateString('fr-FR'):''}</p></div>
+       <p class="small muted" style="margin-top:10px">Total : <b>${r.TO.toLocaleString('fr-FR')}</b> points${pr.ok?' · projection '+S.target.toLocaleString('fr-FR')+' le '+pr.date.toLocaleDateString('fr-FR'):pr.suspect?' · <span class="down">dernier relevé à vérifier ci-dessous</span>':''}</p></div>
      <div class="card"><div class="card-h"><h2>${ico('up')}À faire monter</h2><span class="small muted">par priorité</span></div><div id="needsAll">${needsHTML(7)}</div></div>
      <div class="card"><div class="card-h"><h2>Safety dans le temps</h2><span class="chip"><i style="background:var(--good)"></i>Seuil 80</span></div><div class="chartbox"><canvas id="saChart"></canvas></div></div>
      <div class="card"><div class="card-h"><h2>Tous les ratings</h2></div><div class="chartbox"><canvas id="allChart"></canvas></div></div>
@@ -939,11 +951,25 @@ function renderProgress(){
      <div class="card"><div class="card-h"><h2>D'où viennent tes contacts</h2><span class="small muted">${cc.n} dernière${cc.n>1?'s':''} course${cc.n>1?'s':''}</span></div>
        ${cc.tot?Object.entries(CAUSES).map(([k,l])=>{const n=cc.c[k]||0;return`<div class="cbar"><span>${l}</span><div class="meter" style="margin:0"><i style="width:${n/cc.tot*100}%;background:${k===cc.dom?'var(--bad)':'var(--primary)'}"></i></div><b>${n}</b></div>`}).join('')+(cc.dom?`<div class="highlight" style="margin-top:12px"><p class="small"><b>Point à travailler : ${esc(CAUSES[cc.dom].toLowerCase())}</b></p><p class="small" style="margin-top:4px;color:#c6cfdd">${esc(CAUSE_TIP[cc.dom])}. Tes sessions et objectifs sont réglés là-dessus.</p></div>`:'')
        :`<div class="empty"><div class="ic">${ico('users')}</div>Pendant tes courses, touche la situation de chaque contact (départ, dépassement…). Ici, tu verras d'où ils viennent.</div>`}</div>
-   </div>`;
+   </div>
+   <div class="card" style="margin-top:16px" id="snapList"><div class="card-h"><h2>Tes relevés</h2><span class="small muted">Une erreur de saisie ? Corrige-la ici.</span></div>
+     <div style="overflow-x:auto"><table><tr><th>Date</th><th>Total</th>${KEYS.map(k=>`<th>${k}</th>`).join('')}<th></th></tr>
+     ${(()=>{const L=snaps();return L.map((x,i)=>{const prv=L.slice(0,i).filter(y=>y.TO>0).map(y=>y.TO),bad=x.TO>0&&prv.length&&x.TO<Math.max(...prv)-300;
+       return`<tr ${bad?'style="background:var(--bad-soft)"':''}><td>${fmtDate(x.date)}</td><td><b class="${bad?'down':''}">${(x.TO||0).toLocaleString('fr-FR')}</b></td>${KEYS.map(k=>`<td>${x[k]}</td>`).join('')}
+       <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" data-sedit="${x.ts}">${ico('edit')}Modifier</button>${L.length>1?`<button class="btn btn-ghost btn-sm" data-sdel="${x.ts}" aria-label="Supprimer">${ico('trash')}</button>`:''}</td></tr>`}).reverse().join('')})()}
+     </table></div></div>`;
   bindNeeds($('#needsAll'));
-  $('#newSnap').onclick=()=>{$('#snapCard').style.display=''};
-  $('#snapCancel').onclick=()=>{$('#snapCard').style.display='none'};
-  $('#snapSave').onclick=()=>{const s={ts:Date.now(),date:$('#s-date').value||today(),TO:+$('#s-TO').value,TOT:lastSnap().TOT??null};KEYS.forEach(k=>s[k]=+$('#s-'+k).value);S.snapshots.push(s);save();toast('Relevé enregistré');renderProgress()};
+  let editTs=null;
+  $('#newSnap').onclick=()=>{editTs=null;$('#snapTitle').textContent='Nouveau relevé de ratings';$('#s-date').value=today();$('#s-TO').value=r.TO;KEYS.forEach(k=>$('#s-'+k).value=r[k]);$('#snapCard').style.display=''};
+  $('#snapCancel').onclick=()=>{editTs=null;$('#snapCard').style.display='none'};
+  $('#snapSave').onclick=()=>{const vals={date:$('#s-date').value||today(),TO:+$('#s-TO').value};KEYS.forEach(k=>vals[k]=+$('#s-'+k).value);
+    if(editTs!=null){const x=S.snapshots.find(y=>y.ts===editTs);if(x)Object.assign(x,vals);toast('Relevé corrigé')}
+    else{S.snapshots.push({ts:Date.now(),TOT:lastSnap().TOT??null,...vals});toast('Relevé enregistré')}
+    save();renderProgress()};
+  $$('[data-sedit]').forEach(b=>b.onclick=()=>{const x=S.snapshots.find(y=>String(y.ts)===b.dataset.sedit);if(!x)return;editTs=x.ts;
+    $('#snapTitle').textContent='Corriger le relevé du '+fmtDate(x.date);$('#s-date').value=x.date;$('#s-TO').value=x.TO||0;KEYS.forEach(k=>$('#s-'+k).value=x[k]??0);
+    $('#snapCard').style.display='';window.scrollTo(0,0)});
+  $$('[data-sdel]').forEach(b=>b.onclick=()=>{if(!confirm('Supprimer ce relevé ?'))return;S.snapshots=S.snapshots.filter(y=>String(y.ts)!==b.dataset.sdel);save();toast('Relevé supprimé');renderProgress()});
   withChart(drawCharts);
 }
 function drawCharts(){
