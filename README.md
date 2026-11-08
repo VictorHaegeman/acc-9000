@@ -12,6 +12,10 @@ Un coach qui te dit quoi rouler pour faire monter tes ratings ACC, et qui s'adap
 
 Pages : Accueil, Session, Objectifs (hebdo), Progression (graphiques), Historique, Médailles, Guide, Réglages.
 
+## Objectif : la compétition
+
+La page **Compétition** suit la feuille de route vers les vraies courses en ligne : 80 de Safety, test de licence LFM, première course LFM, licences Iron, Bronze et Silver (Elo, nombre de courses, safety LFM), premier championnat, équipe. Les phases, les sessions recommandées et les objectifs suivent cette feuille de route. Le Total ACC reste affiché en bonus : il ne donne aucun accès.
+
 ## Ce qui s'adapte à toi
 
 - **Temps dispo** (20 min, 45 min, 1 h 30) : les sessions trop longues passent en bas et la course IA est raccourcie.

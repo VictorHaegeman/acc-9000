@@ -216,6 +216,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .track.off{opacity:.5}
 .own{font-size:12px;color:var(--faint);background:none;border:0;cursor:pointer;padding:0;text-decoration:underline;display:block;margin-top:2px}
 .levelup{border:1px solid rgba(52,211,153,.4);background:var(--good-soft);border-radius:14px;padding:16px 18px;margin-top:16px;display:flex;gap:12px;align-items:center;color:#bbf7d0}
+.road{display:flex;flex-direction:column;gap:0}
+.ms{display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:start;padding:14px 0;position:relative}
+.ms+.ms{border-top:1px solid var(--line)}
+.ms .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--surface2);border:2px solid var(--line2);font-weight:700;font-size:13px;color:var(--muted)}
+.ms.ok .dot{background:var(--good);border-color:var(--good);color:#06281c}
+.ms.now .dot{border-color:var(--primary);color:#cfe0ff;background:var(--primary-soft);box-shadow:0 0 0 4px rgba(77,141,255,.15)}
+.ms.ok h3{color:var(--muted)}
+.ms .meter{margin-top:8px}
+.lic{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;font-weight:700;font-size:13px;background:var(--surface2);border:1px solid var(--line2)}
 .cbar{display:grid;grid-template-columns:140px 1fr 32px;gap:10px;align-items:center;margin:9px 0;font-size:13px}
 .hist{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .hist+.hist{margin-top:8px}
@@ -255,7 +264,7 @@ body.onboarding .topnav,body.onboarding .bar-right,body.onboarding .bottomnav{di
 .sync.err{color:#fca5a5;border-color:rgba(248,113,113,.35)}.sync.err i{background:var(--bad)}
 .topnav{overflow:hidden}
 @media (max-width:1180px){.sync span{display:none}.sync{padding:9px}}
-@media (max-width:1480px) and (min-width:961px){.topnav a .l{display:none}.topnav a.on .l{display:inline}}
+@media (max-width:1640px) and (min-width:961px){.topnav a .l{display:none}.topnav a.on .l{display:inline}}
 .banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:12px;border:1px solid rgba(251,191,36,.35);background:var(--warn-soft);margin-bottom:16px}
 .need{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
 .need:first-of-type{border-top:0;padding-top:0}
@@ -277,7 +286,7 @@ code{background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-ra
   <div class="in">
     <a class="logo" href="#/home">
       <span class="mark"><svg viewBox="0 0 24 24"><path d="M4 18 10 6l3 6 2-4 5 10"/></svg></span>
-      <span><b>ACC 9000</b><small>Plan de progression</small></span>
+      <span><b>ACC 9000</b><small>Objectif compétition</small></span>
     </a>
     <nav class="topnav" id="topnav"></nav>
     <div class="bar-right">
@@ -295,6 +304,7 @@ code{background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-ra
   <section class="page" id="page-home"></section>
   <section class="page" id="page-session"></section>
   <section class="page" id="page-goals"></section>
+  <section class="page" id="page-career"></section>
   <section class="page" id="page-progress"></section>
   <section class="page" id="page-history"></section>
   <section class="page" id="page-medals"></section>
@@ -306,11 +316,11 @@ code{background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-ra
     <div class="grid g2">
       <div class="card"><span class="tag phase">Phase 1</span><h2 style="margin-top:10px">Reconstruire la Safety</h2><p class="muted small" style="margin-top:4px">SA &lt; 65 · sortie à 65 avec une tendance stable</p>
         <ul><li>Courses offline contre l'IA, grille pleine, IA réglée pour finir en milieu de peloton.</li><li>Pas de serveur public sans exigence SA tant que la tendance n'est pas repartie.</li><li>Médailles manquantes en parallèle : ça ne coûte rien en SA.</li></ul></div>
-      <div class="card"><span class="tag phase">Phase 2</span><h2 style="margin-top:10px">Ouvrir les Competition Servers</h2><p class="muted small" style="margin-top:4px">SA 65–79 · sortie à 80 avec les médailles</p>
-        <ul><li>Public uniquement sur serveurs filtrés, exigence SA la plus haute possible.</li><li>Objectif zéro contact en séries de sessions.</li><li>LFM possible dès que tu es à l'aise, la propreté avant le résultat.</li></ul></div>
-      <div class="card"><span class="tag phase">Phase 3</span><h2 style="margin-top:10px">Vitesse et Competition</h2><p class="muted small" style="margin-top:4px">SA ≥ 80 · sortie à PC 60 et CP lancée</p>
+      <div class="card"><span class="tag phase">Phase 2</span><h2 style="margin-top:10px">Atteindre 80 de Safety</h2><p class="muted small" style="margin-top:4px">SA 65–79 · 80 ouvre LFM et les Competition Servers</p>
+        <ul><li>Public uniquement sur serveurs filtrés, exigence SA la plus haute possible.</li><li>Objectif zéro contact en séries de sessions.</li><li>Entraîne le test de licence LFM : 7 tours d'affilée sous 107 % du record.</li></ul></div>
+      <div class="card"><span class="tag phase">Phase 3</span><h2 style="margin-top:10px">Entrer en compétition</h2><p class="muted small" style="margin-top:4px">SA ≥ 80 · sortie avec ta licence LFM</p>
         <ul><li>Special Events chaque semaine (Hotlap, Superpole, Hotstint). Pace ≈ 90 × (1 − rang ÷ participants) : top 33 % ≈ 60 de Pace.</li><li>Les serveurs publics normaux ne font pas monter le Pace.</li><li>Une course Competition Server par jour sur une piste à 3 médailles.</li><li>Télémétrie contre une référence, un virage à la fois.</li></ul></div>
-      <div class="card"><span class="tag phase">Phase 4</span><h2 style="margin-top:10px">LFM et championnats</h2><p class="muted small" style="margin-top:4px">SA ≥ 80, PC ≥ 60 · cible : splits du haut puis équipe</p>
+      <div class="card"><span class="tag phase">Phase 4</span><h2 style="margin-top:10px">Monter en LFM et championnats</h2><p class="muted small" style="margin-top:4px">Licence LFM · cible : Bronze, Silver, championnat, équipe</p>
         <ul><li>LFM régulier, toujours la même voiture.</li><li>Un championnat The SimGrid ou une ligue : c'est là que les équipes recrutent.</li><li>Endurance en équipe : pneus, relais, régularité.</li></ul></div>
       <div class="card"><h2>Règles pour protéger ta Safety</h2>
         <ul><li><b>Tour 1 :</b> tu suis. Freine un peu plus tôt au premier virage, aucun plongeon.</li><li><b>Dépassement :</b> seulement si ta roue avant est à hauteur avant le point de corde.</li><li><b>Défense :</b> un seul changement de trajectoire, jamais au freinage.</li><li><b>Après une erreur :</b> tu rejoins la piste quand c'est dégagé.</li><li><b>Contact non fautif :</b> il pénalise quand même, garde de la marge dans les zones chaudes.</li><li><b>Lobby chaotique :</b> tu quittes. Une course perdue coûte moins qu'une SA qui chute.</li></ul></div>
@@ -334,6 +344,8 @@ const TYPES={ai:'Course vs IA',pubf:'Public filtré',pubo:'Public ouvert',comp:'
 const MULTI=['ai','pubf','pubo','comp','lfm','league'];
 const CAUSES={start:'Départ / tour 1',pass:'En dépassant',def:'En défendant',hit:'On m\'a percuté',other:'Autre'};
 const CAUSE_TIP={start:'Départ : laisse deux longueurs devant toi jusqu\'au deuxième virage',pass:'Dépasse seulement en ligne droite, ou avec la roue avant à hauteur avant le freinage',def:'Défense : une seule trajectoire, tu ne refermes jamais au freinage',hit:'Garde de la marge : ne reste pas dans l\'angle mort et laisse passer plus rapide que toi'};
+const LIC=[['Rookie',0,0,0],['Iron',0,10,4],['Iron+',1000,10,4],['Bronze',1300,10,4],['Bronze+',1500,10,4],['Silver',1700,25,5],['Silver+',2000,25,5],['Gold',2500,50,6.5],['Gold+',3500,50,6.5],['Platinum',5000,100,6.5],['Legend',6000,150,6.5],['Alien',8000,200,6.5]];
+const LIC_COL={Rookie:'#9ca3af',Iron:'#9ca3af','Iron+':'#9ca3af',Bronze:'#d29a63','Bronze+':'#d29a63',Silver:'#cbd5e1','Silver+':'#cbd5e1',Gold:'#fbbf24','Gold+':'#fbbf24',Platinum:'#a5f3fc',Legend:'#c4b5fd',Alien:'#86efac'};
 const MIN_DUR={ai:20,medals:15,pubf:40,se:15,cn:20,tel:30,comp:40,lfm:60};
 
 const IC={
@@ -371,7 +383,7 @@ function normalize(){
   if(!S.profile)S.profile={name:'Victor'}; /* données v1 = profil de Victor */
   if(!S.medals)S.medals={};
   TRACKS.forEach(([t])=>{if(S.medals[t]==null)S.medals[t]=0});
-  S.checks=S.checks||{};S.sessions=S.sessions||[];S.target=S.target||9000;S.noTracks=S.noTracks||{};S.weekPick=S.weekPick||{};
+  S.checks=S.checks||{};S.sessions=S.sessions||[];S.target=S.target||9000;S.noTracks=S.noTracks||{};S.weekPick=S.weekPick||{};S.lfm=Object.assign({test:false,licensed:false,elo:null,sr:null,races:0,champ:false,team:false},S.lfm||{});
   if(!Array.isArray(S.snapshots)||!S.snapshots.length)S.snapshots=[{ts:Date.now(),date:today(),...blankRatings()}];
   if(S.active===undefined)S.active=null;S.updatedAt=S.updatedAt||0;S.v=2;
 }
@@ -475,13 +487,27 @@ const pcFromRank=(r,n)=>Math.max(0,Math.round(90*(1-r/n)));
 const topFor=pc=>Math.max(1,Math.round((1-pc/90)*100));
 function seStats(){const L=sessDesc().filter(s=>SE.includes(s.type)&&s.rank&&s.of);const best=L.reduce((b,s)=>!b||s.rank/s.of<b.rank/b.of?s:b,null);return{n:L.length,last:L[0]||null,best}}
 function seTarget(pc){const t=Math.min(90,Math.max(pc+15,40));return{pc:t,top:topFor(t)}}
+function lfmLicense(){const L=S.lfm;if(!L.licensed)return null;let cur=LIC[0];for(const l of LIC){if((L.elo||0)>=l[1]&&(L.races||0)>=l[2]&&(L.sr||0)>=l[3])cur=l}return cur}
+function lfmNext(){const c=lfmLicense();if(!c)return null;const i=LIC.indexOf(c);return LIC[i+1]||null}
+function lfmDivision(){const e=S.lfm.elo;if(e==null)return null;return e>2000?1:e>1600?2:e>1300?3:4}
+function roadmap(){const r=current(),L=S.lfm,lic=lfmLicense(),nl=lfmNext(),lfmRaces=Math.max(L.races||0,S.sessions.filter(s=>s.type==='lfm').length);
+  const M=[
+   {id:'sa',t:'80 de Safety',d:'Le ticket d\'entrée pour LFM et les Competition Servers.',ok:r.SA>=80,val:r.SA,max:80,auto:true},
+   {id:'test',t:'Test de licence LFM',d:'7 tours valides d\'affilée, moyenne sous 107 % du record de la piste de licence. Tu peux l\'entraîner avant d\'avoir 80.',ok:!!L.test,check:'test'},
+   {id:'first',t:'Première course LFM',d:'Licence Rookie, safety LFM de départ à 2,50.',ok:lfmRaces>=1,auto:true},
+   {id:'iron',t:'Licence Iron',d:'10 courses classées et 4,0 de safety LFM.',ok:!!lic&&LIC.indexOf(lic)>=1,val:Math.min(lfmRaces,10),max:10,unit:'courses',auto:true},
+   {id:'bronze',t:'Licence Bronze · division 3',d:'1 300 Elo. Tu cours dans des splits plus rapides.',ok:!!lic&&LIC.indexOf(lic)>=3,val:L.elo||0,max:1300,unit:'Elo',auto:true},
+   {id:'champ',t:'Premier championnat',d:'The SimGrid ou une ligue : des courses fixes, contre les mêmes pilotes. C\'est là que les équipes regardent.',ok:!!L.champ,check:'champ'},
+   {id:'silver',t:'Licence Silver · division 2',d:'1 700 Elo, 25 courses, 5,0 de safety LFM.',ok:!!lic&&LIC.indexOf(lic)>=5,val:L.elo||0,max:1700,unit:'Elo',auto:true},
+   {id:'team',t:'Rouler pour une équipe',d:'Endurance en équipe ou line-up de championnat.',ok:!!L.team,check:'team'}];
+  const now=M.find(m=>!m.ok);if(now)now.now=true;return{M,lic,nl,lfmRaces,now}}
 function typeStats(){const g={};S.sessions.forEach(s=>{if(typeof s.saDelta!=='number')return;const o=g[s.type]=g[s.type]||{n:0,sum:0,c:0};o.n++;o.sum+=s.saDelta;o.c+=s.contacts||0});return Object.entries(g).map(([t,o])=>({type:t,n:o.n,avg:o.sum/o.n,c:o.c/o.n})).sort((a,b)=>b.avg-a.avg)}
 function saTrend(){const p=saPoints();if(p.length<2)return 0;const r=p.slice(-6);return r.at(-1).v-r[0].v}
 function phase(r){
   if(r.SA<65)return{n:1,name:'Reconstruire la Safety',goal:'Remonter au-dessus de 65 SA et stopper la chute.',exit:{label:'Safety',val:r.SA,max:65}};
-  if(r.SA<80)return{n:2,name:'Ouvrir les Competition Servers',goal:'Atteindre 80 SA, le seuil des Competition Servers.',exit:{label:'Safety',val:r.SA,max:80}};
-  if(r.PC<60||r.CP<40)return{n:3,name:'Vitesse et Competition',goal:'Monter ton Pace au-dessus de 60 et lancer ta CP.',exit:{label:'Pace',val:r.PC,max:60}};
-  return{n:4,name:'LFM et championnats',goal:'Résultats réguliers dans les splits du haut, puis un championnat.',exit:{label:'Total',val:r.TO,max:S.target}};
+  if(r.SA<80)return{n:2,name:'Atteindre 80 de Safety',goal:'80, c\'est le ticket d\'entrée pour LFM et les Competition Servers. Prépare le test de licence LFM en parallèle.',exit:{label:'Safety',val:r.SA,max:80}};
+  if(!S.lfm||!S.lfm.licensed)return{n:3,name:'Entrer en compétition',goal:'Passe le test de licence LFM et lance-toi en Competition Servers.',exit:{label:'Licence LFM',val:S.lfm&&S.lfm.test?1:0,max:2}};
+  const nl=lfmNext();return{n:4,name:'Monter en LFM et championnats',goal:'Courses LFM régulières, licence supérieure, puis un championnat.',exit:nl?{label:'Elo vers '+nl[0],val:S.lfm.elo||0,max:nl[1]||1}:{label:'Elo',val:S.lfm.elo||0,max:S.lfm.elo||1}};
 }
 function projection(){const s=snaps().filter(x=>x.TO>0);if(s.length<2)return{need:true};
   const b=s.at(-1),prevMax=Math.max(...s.slice(0,-1).map(x=>x.TO));
@@ -513,7 +539,7 @@ function templates(){
     steps:['Multijoueur, filtre sur l\'exigence Safety','Prends l\'exigence la plus haute que tu peux rejoindre','Premier tour prudent','Lobby chaotique au tour 1 : tu quittes']});
   {const ss=seStats(),tg=seTarget(r.PC);
   T.push({id:'se',type:'hotlap',title:'Special Event de la semaine',dur:30,boosts:['PC'],
-    score:r.PC<60?(ph.n>=3?90:50):25,
+    score:r.PC<60?52:25,
     why:`Le Pace n'est pas requis pour les Competition Servers, mais c'est un bonus sans risque : classement en solo, ta Safety n'est pas en jeu. Vise le top ${tg.top} % pour ≈ ${tg.pc} de Pace.`,
     steps:['Ouvre le classement de l\'event : note le temps du top '+tg.top+' %','10 min d\'échauffement en entraînement, même piste et même voiture','Seul ton meilleur tour valide compte : enchaîne les runs','Zéro coupe de piste, un tour invalide ne compte pas','À la fin, note ton rang et le nombre de participants']})}
   const cnDrop=pv&&(r.CN<pv.CN||r.CC<pv.CC);
@@ -526,7 +552,11 @@ function templates(){
   if(r.SA>=80)T.push({id:'comp',type:'comp',title:'Competition Server',dur:45,boosts:['CP','RC','SA'],score:95,
     why:`Ta Competition est à ${r.CP} : seul moyen de la monter.`,
     steps:['Multijoueur, Competition Server','Il faut 3 médailles sur la piste du créneau','Ta CP est en jeu dès la qualif','En course : finir propre avant tout']});
-  if(r.SA>=70)T.push({id:'lfm',type:'lfm',title:'Course LFM',dur:60,boosts:['RC','PC','SA'],score:ph.n>=3?85:48,
+  if(!S.lfm.test)T.push({id:'lfmtest',type:'practice',title:'Préparer le test de licence LFM',dur:30,boosts:['CN','CC'],
+    score:ph.n===3?98:ph.n===2?(r.SA>=70?62:42):18,
+    why:ph.n>=3?'Ta Safety est à 80 : le test de licence est la dernière marche avant tes premières courses LFM.':'7 tours d\'affilée sous 107 % du record : entraîne-le maintenant pour le passer dès que tu as 80 de Safety.',
+    steps:['Sur le site LFM, repère la piste de licence du moment et son record','Entraînement sur cette piste, en GT3','Vise 7 tours valides d\'affilée, sans aucune coupe','Calcule ta moyenne : elle doit être sous 107 % du record','Note ta moyenne dans les notes de session']});
+  if(r.SA>=80&&S.lfm.test)T.push({id:'lfm',type:'lfm',title:'Course LFM',dur:60,boosts:['RC','PC','SA'],score:ph.n>=4?96:85,
     why:'L\'échelle de référence pour la suite : tes résultats LFM, c\'est ton CV.',
     steps:['Inscription à la course sur LFM','Même voiture que d\'habitude','Qualif propre','Course : finir dans ton split sans incident']});
   T.forEach(t=>{const s=st(t.type);if(s&&s.n>=2){t.score+=s.avg*6;t.personal=`Pour toi : ${sign(s.avg)} SA en moyenne sur ${s.n} sessions`}});
@@ -594,6 +624,8 @@ function setupFor(t,r){
   if(t.id==='tel')return{track:fam,trackFree:true,reason:'Une piste connue, pour que l\'écart avec la référence vienne de ta technique.',
     setup:[['Mode','Entraînement'],['Circuit',fam,'','track'],C,['Outil','Ton outil de télémétrie habituel'],['Référence','Un tour plus rapide avec la même voiture']]};
   if(t.type==='comp')return{reason:'Ta Competition ne monte qu\'ici.',setup:[['Mode','Multijoueur, Competition Server'],['Circuit','Celui du créneau','3 médailles obligatoires'],C,['Format','Qualif puis course']]};
+  if(t.id==='lfmtest')return{reason:'LFM demande 80 de Safety ACC et ce test de régularité. Exemple : record de Misano 1:31.895, il faut une moyenne sous 1:38.328.',
+    setup:[['Mode','Entraînement, piste vide'],['Circuit','Piste de licence LFM du moment','Affichée sur le site LFM'],C,['Objectif','7 tours valides d\'affilée'],['Cible','Moyenne sous 107 % du record de la piste']]};
   if(t.type==='lfm')return{reason:'Les résultats LFM sont ceux que regardent les équipes.',setup:[['Plateforme','Low Fuel Motorsport'],['Circuit','Celui de la semaine'],C]};
   return{};
 }
@@ -608,7 +640,7 @@ function needs(){
     {k:'RC',val:r.RC,max:85,w:1,why:'duels et dépassements propres'},
     {k:'CN',val:r.CN,max:90,w:.8,why:'régularité tour après tour'},
     {k:'CC',val:r.CC,max:90,w:.8,why:'contrôle à la limite'},
-    {k:'CP',val:r.CP,max:50,w:1.1,why:'résultats en Competition Server',lock:r.SA<80?'Se débloque à 80 de Safety':''},
+    {k:'CP',val:r.CP,max:50,w:1.1,why:'résultats en Competition Server',lock:r.SA<80?'Se débloque à 80 de Safety, avec les Competition Servers':''},
   ];
   return L.filter(x=>x.val<x.max).map(x=>({...x,gap:(1-x.val/x.max)*x.w,tpl:x.lock?null:T.find(t=>t.boosts.includes(x.k))})).sort((a,b)=>(a.lock?1:0)-(b.lock?1:0)||b.gap-a.gap);
 }
@@ -633,11 +665,14 @@ function buildGoals(){
   if(!S.weekPick[wk])S.weekPick[wk]=missingTracks().slice(0,3);
   const pk=S.weekPick[wk].filter(t=>!S.noTracks[t]);
   if(pk.length)G.push({id:'medals',p:ph.n<=2?2:3,title:'Médailles : '+pk.join(', '),detail:'Les 3 médailles sur chaque piste.',why:`${medalsTotal()}/75 médailles au total.`,prog:pk.filter(t=>S.medals[t]===3).length,n:pk.length});
-  if(r.PC<60){const tg=seTarget(r.PC);G.push({id:'pace-se',p:ph.n>=3?1:3,title:`Special Event : top ${tg.top} %`,detail:`Environ ${tg.pc} de Pace. Classement en solo, aucun risque pour ta Safety.`,why:`Pace à ${r.PC}. Il ne monte qu'avec les Special Events et les Competition Servers, pas avec les serveurs publics normaux.`,prog:W.filter(s=>SE.includes(s.type)&&s.rank&&s.of&&s.rank/s.of*100<=tg.top).length,n:1})}
+  if(r.PC<60){const tg=seTarget(r.PC);G.push({id:'pace-se',p:3,title:`Special Event : top ${tg.top} %`,detail:`Environ ${tg.pc} de Pace. Classement en solo, aucun risque pour ta Safety.`,why:`Pace à ${r.PC}. Il ne monte qu'avec les Special Events et les Competition Servers, pas avec les serveurs publics normaux.`,prog:W.filter(s=>SE.includes(s.type)&&s.rank&&s.of&&s.rank/s.of*100<=tg.top).length,n:1})}
   if(r.SA>=80)G.push({id:'comp',p:1,title:'5 courses en Competition Server',detail:'Sur des pistes où tu as 3 médailles.',why:`Competition à ${r.CP}.`,prog:cnt(s=>s.type==='comp'),n:5});
-  if(r.SA>=70)G.push({id:'lfm',p:ph.n>=3?1:3,title:'2 courses LFM',detail:'Même voiture, finir propre.',why:'Ton classement LFM compte pour la suite.',prog:cnt(s=>s.type==='lfm'),n:2});
+  if(!S.lfm.test){if(ph.n===2)G.push({id:'lfm-prep',p:3,title:'Une session d\'entraînement au test LFM',detail:'7 tours d\'affilée sous 107 % du record.',why:'Tu le passeras dès 80 de Safety.',prog:W.filter(s=>s.tplId==='lfmtest').length,n:1});
+    if(ph.n===3)G.push({id:'lfm-test',p:1,title:'Passer le test de licence LFM',detail:'Coche-le dans la page Compétition une fois validé.',why:'C\'est la dernière marche avant les courses LFM.',rule:true,broken:true,label:'Pas encore validé'})}
+  if(ph.n===3&&S.lfm.test)G.push({id:'lfm-first',p:1,title:'Ta première course LFM',detail:'Inscris-toi à une course sur le site LFM. Objectif : finir propre, pas gagner.',why:'Licence validée : il ne manque plus que ta première course.',prog:cnt(s=>s.type==='lfm'),n:1});
+  if(ph.n===4){const nl=lfmNext();G.push({id:'lfm',p:1,title:'3 courses LFM',detail:'Même voiture à chaque fois. Finir propre avant tout : la safety LFM compte pour la licence.',why:nl?`Prochaine licence : ${nl[0]} (${nl[1]?nl[1]+' Elo, ':''}${nl[2]} courses, ${nl[3]} de safety LFM).`:'Tu es au sommet des licences.',prog:cnt(s=>s.type==='lfm'),n:3})}
   if(pv&&(r.CN<pv.CN||r.CC<pv.CC))G.push({id:'cncc',p:2,title:'Une session régularité',detail:'15 tours dans 0,5 s.',why:'Consistency ou Car Control en baisse.',prog:cnt(s=>s.tplId==='cn'),n:1});
-  if(ph.n===4)G.push({id:'league',p:1,title:'Inscris-toi à un championnat',detail:'The SimGrid ou une ligue.',why:'C\'est là que les équipes recrutent.'});
+  if(ph.n===4&&!S.lfm.champ&&(S.lfm.elo||0)>=1300)G.push({id:'league',p:1,title:'Inscris-toi à un championnat',detail:'The SimGrid ou une ligue, puis coche-le dans la page Compétition.',why:'C\'est là que les équipes recrutent.'});
   G.push({id:'log',p:3,title:'Safety notée après chaque session',detail:'Dans l\'écran de fin de session.',why:'C\'est ce qui permet à l\'app de s\'adapter à toi.',prog:W.filter(s=>typeof s.saAfter==='number').length,n:Math.max(1,W.length)});
   return{ph,goals:G.sort((a,b)=>a.p-b.p)};
 }
@@ -646,16 +681,16 @@ function toggleGoal(id){const wk=weekKey();const c=S.checks[wk]=S.checks[wk]||{}
 function goalHTML(g,mini){const pl={1:['p1','Priorité'],2:['p2','Important'],3:['p3','Bonus']}[g.p];
   const auto=g.n!=null,man=!auto&&!g.rule,done=auto?g.prog>=g.n:man&&goalOk(g);
   const status=auto?`<div class="gprog"><div class="meter"><i style="width:${Math.min(100,g.prog/g.n*100)}%;background:${done?'var(--good)':'var(--primary)'}"></i></div><b class="small">${Math.min(g.prog,g.n)} / ${g.n}</b></div>`
-    :g.rule?`<p class="small ${g.broken?'down':'up'}" style="margin-top:6px;font-weight:600">${g.broken?'Pas respecté cette semaine':'Respecté pour l\'instant'}</p>`:'';
+    :g.rule?`<p class="small ${g.broken?'down':'up'}" style="margin-top:6px;font-weight:600">${g.label||(g.broken?'Pas respecté cette semaine':'Respecté pour l\'instant')}</p>`:'';
   return`<div class="goal ${mini?'mini':''} ${done?'done':''} ${man?'':'auto'}" ${man?`data-goal="${esc(g.id)}" role="checkbox" aria-checked="${done}" tabindex="0"`:''}><span class="box" ${g.rule?`style="border-color:${g.broken?'var(--bad)':'var(--good)'}"`:''}></span><div style="flex:1;min-width:0"><h3><span class="tag ${pl[0]}">${pl[1]}</span>${esc(g.title)}</h3>${mini?status:`<p style="margin-top:4px">${esc(g.detail)}</p><p class="why">${esc(g.why)}</p>${status}`}</div></div>`}
 function bindGoals(root,rerender){root.querySelectorAll('[data-goal]').forEach(el=>{const f=()=>{toggleGoal(el.dataset.goal);rerender()};el.onclick=f;el.onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();f()}}})}
 
 /* ================= nav / router ================= */
-const NAV=[['home','Accueil','home'],['session','Session','play'],['goals','Objectifs','target'],['progress','Progression','chart'],['history','Historique','clock'],['medals','Médailles','star'],['guide','Guide','book']];
+const NAV=[['home','Accueil','home'],['session','Session','play'],['career','Compétition','trophy'],['goals','Objectifs','target'],['progress','Progression','chart'],['history','Historique','clock'],['medals','Médailles','star'],['guide','Guide','book']];
 const BNAV=[['home','Accueil','home'],['session','Session','play'],['goals','Objectifs','target'],['progress','Progrès','chart'],['more','Plus','more']];
 $('#topnav').innerHTML=NAV.map(([id,l,i])=>`<a href="#/${id}" data-nav="${id}" title="${l}">${ico(i)}<span class="l">${l}</span></a>`).join('');
 $('#bottomnav').innerHTML=BNAV.map(([id,l,i])=>`<a href="#/${id}" data-nav="${id}">${ico(i)}${l}</a>`).join('');
-const RENDER={welcome:renderWelcome,home:renderHome,session:renderSession,goals:renderGoals,progress:renderProgress,history:renderHistory,medals:renderMedals,more:renderMore,settings:renderSettings,guide:()=>{}};
+const RENDER={welcome:renderWelcome,career:renderCareer,home:renderHome,session:renderSession,goals:renderGoals,progress:renderProgress,history:renderHistory,medals:renderMedals,more:renderMore,settings:renderSettings,guide:()=>{}};
 let page='home';
 function route(){
   page=(location.hash.replace(/^#\/?/,'')||'home').split('?')[0];
@@ -664,7 +699,7 @@ function route(){
   if(page!=='session')summary=null;
   document.body.classList.toggle('onboarding',!S);
   $$('.page').forEach(p=>p.classList.toggle('on',p.id==='page-'+page));
-  const moreSet=['history','medals','guide','settings','more'];
+  const moreSet=['history','medals','guide','settings','more','career'];
   $$('[data-nav]').forEach(a=>a.classList.toggle('on',a.dataset.nav===page||(a.closest('#bottomnav')&&a.dataset.nav==='more'&&moreSet.includes(page))));
   $('#setBtn').classList.toggle('on',page==='settings');
   RENDER[page]();updateBar();window.scrollTo(0,0);
@@ -700,9 +735,9 @@ function renderHome(){
    <div class="card" style="margin-top:16px"><div class="card-h"><h2>${ico('up')}À faire monter en priorité</h2><span class="small muted">Calculé sur tes stats</span></div><div id="needs">${needsHTML(3)}</div></div>
    <div class="grid g4" style="margin-top:16px">
      <div class="card kpi"><div class="l">${ico('shield')}Safety${r.saLive?' · dernière session':''}</div><div class="v num" style="color:${saCol}">${r.SA}<small> / 80</small></div><div class="meter"><i style="width:${Math.min(100,r.SA/80*100)}%;background:${saCol}"></i></div><div class="d">80 pour les Competition Servers</div></div>
-     <div class="card kpi"><div class="l">${ico('chart')}Total rating</div><div class="v num">${r.TO.toLocaleString('fr-FR')}</div><div class="meter"><i style="width:${Math.min(100,r.TO/S.target*100)}%"></i></div><div class="d">${S.target-r.TO>0?(S.target-r.TO).toLocaleString('fr-FR')+' points avant '+S.target.toLocaleString('fr-FR'):'Objectif atteint'}</div></div>
+     <div class="card kpi"><div class="l">${ico('chart')}Total rating</div><div class="v num">${r.TO.toLocaleString('fr-FR')}</div><div class="meter"><i style="width:${Math.min(100,r.TO/S.target*100)}%"></i></div><div class="d">${projKPI(pr).ok?'Projection '+S.target.toLocaleString('fr-FR')+' : '+projKPI(pr).v:projKPI(pr).suspect?projKPI(pr).d:(S.target-r.TO>0?(S.target-r.TO).toLocaleString('fr-FR')+' points avant '+S.target.toLocaleString('fr-FR'):'Objectif atteint')} · bonus, sans effet sur l'accès</div></div>
      <div class="card kpi"><div class="l">${ico('star')}Médailles</div><div class="v num">${medalsTotal()}<small> / 75</small></div><div class="meter"><i style="width:${medalsTotal()/75*100}%;background:var(--warn)"></i></div><div class="d">${missingTracks().length} pistes incomplètes</div></div>
-     <div class="card kpi"><div class="l">${ico('flag')}Projection ${S.target.toLocaleString('fr-FR')}</div><div class="v num" style="font-size:30px;margin-top:10px">${projKPI(pr).v}</div><div class="d">${projKPI(pr).d}</div></div>
+     ${(()=>{const R=roadmap(),n=R.now,i=R.M.indexOf(n);return n?`<a class="card kpi" href="#/career" style="color:inherit;border-color:var(--primary-line)"><div class="l">${ico('trophy')}Prochaine étape compétition</div><div class="v num" style="font-size:24px;margin-top:10px;line-height:1.2">${esc(n.t)}</div>${n.max?`<div class="meter"><i style="width:${Math.min(100,n.val/n.max*100)}%"></i></div>`:''}<div class="d">Étape ${i+1} sur ${R.M.length} · voir la feuille de route</div></a>`:`<a class="card kpi" href="#/career" style="color:inherit"><div class="l">${ico('trophy')}Compétition</div><div class="v num" style="font-size:24px;margin-top:10px">Feuille de route terminée</div></a>`})()}
    </div>
    <div class="grid g2" style="margin-top:16px">
      <div class="card"><div class="card-h"><div><h2>${ico('target')}Cette semaine</h2><p class="small muted" style="margin-top:2px">${(()=>{const W=weekSess(),m=W.reduce((x,s)=>x+(s.dur||0),0);return W.length+' session'+(W.length>1?'s':'')+' · '+m+' min de roulage'})()}</p></div><a class="btn btn-ghost btn-sm" href="#/goals">Tout voir</a></div><div id="homeGoals">${goals.slice(0,4).map(g=>goalHTML(g,true)).join('')}</div></div>
@@ -854,6 +889,10 @@ function renderFinish(el){
            <div><label class="f">Ton rang dans l'event</label><input type="number" id="fRank" min="1" placeholder="ex. 4200"></div>
            <div><label class="f">Participants</label><input type="number" id="fOf" min="1" placeholder="ex. 9086"></div></div>
            <p class="hint" id="rankHint">Dans ACC : Special Events, classement. Sert à estimer ton Pace.</p></div>
+         <div class="full" id="lfmBox"><div class="form" style="grid-template-columns:1fr 1fr">
+           <div><label class="f">Elo LFM après la course</label><input type="number" id="fElo" min="0" placeholder="${S.lfm.elo??'ex. 1100'}"></div>
+           <div><label class="f">Safety LFM après</label><input type="number" id="fLsr" min="1" max="9.99" step="0.01" placeholder="${S.lfm.sr??'ex. 2.80'}"></div></div>
+           <p class="hint">Sur ton profil LFM. Sert à suivre ta progression vers la licence suivante.</p></div>
          <div id="resBox"><label class="f">Résultat</label><input id="fResult" placeholder="ex. rang 1240 / 9000"></div>
          <div class="full"><label class="f">Ressenti</label><div class="seg" id="fFeel">${['Galère','Moyen','Correct','Bien','Top'].map((l,i)=>`<button type="button" data-v="${i+1}" class="${i===2?'on':''}">${l}</button>`).join('')}</div></div>
          <div class="full"><label class="f">Médailles sur ce circuit</label><div class="seg" id="fMedals"></div></div>
@@ -872,7 +911,7 @@ function renderFinish(el){
   const seg=(id)=>{$(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))})};
   const medalSeg=()=>{const t=$('#fTrack').value,m=S.medals[t];$('#fMedals').innerHTML=[0,1,2,3].map(n=>`<button type="button" data-v="${n}" class="${n===m?'on':''}">${n} ★</button>`).join('');seg('#fMedals')};
   seg('#fFeel');medalSeg();$('#fTrack').onchange=medalSeg;
-  const posVis=()=>{const t=$('#fType').value,m=MULTI.includes(t),se=SE.includes(t);$('#posBox').style.display=m?'':'none';$('#rankBox').style.display=se?'':'none';$('#resBox').style.display=m||se?'none':''};posVis();$('#fType').onchange=posVis;
+  const posVis=()=>{const t=$('#fType').value,m=MULTI.includes(t),se=SE.includes(t);$('#posBox').style.display=m?'':'none';$('#rankBox').style.display=se?'':'none';$('#lfmBox').style.display=t==='lfm'?'':'none';$('#resBox').style.display=m||se?'none':''};posVis();$('#fType').onchange=posVis;
   const rankHint=()=>{const rk=+$('#fRank').value,of=+$('#fOf').value;$('#rankHint').innerHTML=rk&&of&&rk<=of?`<b>Top ${Math.max(1,Math.round(rk/of*100))} %</b> · ≈ ${pcFromRank(rk,of)} de Pace (estimation)${pcFromRank(rk,of)>r.PC?' <span class="up">mieux que ton Pace actuel</span>':''}`:'Dans ACC : Special Events, classement. Sert à estimer ton Pace.'};
   ['#fRank','#fOf'].forEach(id=>$(id).oninput=rankHint);
   const posHint=()=>{const s=+$('#fStart').value,f=+$('#fFinish').value;$('#posHint').innerHTML=s&&f?`<b class="${s-f>0?'up':s-f<0?'down':'flat'}">${s-f>0?'+':''}${s-f} place${Math.abs(s-f)>1?'s':''}</b> · P${s} → P${f}`:'Départ et arrivée servent à régler l\'IA et ta position de départ la prochaine fois.'};
@@ -890,6 +929,7 @@ function finishSession(){
     feel:+($('#fFeel .on')||{}).dataset?.v||3,notes:$('#fNotes').value.trim(),boosts:a.boosts,
     stepsDone:a.steps.filter(x=>x.done).length,stepsTotal:a.steps.length,setup:a.setup||[],tplId:a.tplId||null,clog:(a.clog||[]).slice(0,Math.max(0,num('#fContacts')??99))};
   if(MULTI.includes(s.type)){const st=num('#fStart'),fi=num('#fFinish'),gr=num('#fGrid');if(fi){s.finish=fi;if(st)s.start=st;if(gr)s.grid=gr;s.result=`P${fi}${gr?' / '+gr:''}`}else s.result=''}
+  if(s.type==='lfm'){const e=num('#fElo'),l=num('#fLsr');S.lfm.races=(S.lfm.races||0)+1;S.lfm.licensed=true;S.lfm.test=true;if(e!=null){s.eloDelta=S.lfm.elo!=null?e-S.lfm.elo:null;S.lfm.elo=e;s.elo=e}if(l!=null){S.lfm.sr=l;s.lsr=l}}
   if(SE.includes(s.type)){const rk=num('#fRank'),of=num('#fOf');if(rk&&of&&rk<=of){s.rank=rk;s.of=of;s.pcEst=pcFromRank(rk,of);s.result=`rang ${rk} / ${of}`}}
   if(sa!==null){s.saAfter=sa;s.saDelta=sa-before.SA}
   S.sessions.push(s);
@@ -916,6 +956,43 @@ function renderSummary(el){
      <div class="row"><button class="btn btn-primary" id="nextGo">${ico('play')}Démarrer</button><a class="btn btn-secondary" href="#/goals">Voir mes objectifs</a><button class="btn btn-ghost" id="sumHome">Accueil</button></div></div></div>`;
   $('#nextGo').onclick=()=>startSession(next);
   $('#sumHome').onclick=()=>{summary=null;go('home')};
+}
+
+/* ================= CAREER ================= */
+function renderCareer(){
+  const R=roadmap(),L=S.lfm,lic=R.lic,nl=R.nl,div=lfmDivision();
+  $('#page-career').innerHTML=`<div class="phead"><div><h1>Compétition</h1><p>Ta feuille de route vers les vraies courses en ligne. Elle avance avec tes ratings et tes données LFM.</p></div></div>
+   <div class="grid g2">
+    <div class="card"><div class="card-h"><h2>${ico('flag')}Feuille de route</h2><span class="small muted">${R.M.filter(m=>m.ok).length} / ${R.M.length}</span></div>
+     <div class="road">${R.M.map((m,i)=>`<div class="ms ${m.ok?'ok':''} ${m.now?'now':''}"><span class="dot">${m.ok?'✓':i+1}</span><div><h3>${esc(m.t)}</h3><p class="small muted" style="margin-top:3px">${esc(m.d)}</p>
+       ${m.max&&!m.ok?`<div class="gprog"><div class="meter"><i style="width:${Math.min(100,m.val/m.max*100)}%"></i></div><b class="small">${(m.val||0).toLocaleString('fr-FR')} / ${m.max.toLocaleString('fr-FR')}${m.unit?' '+m.unit:''}</b></div>`:''}</div>
+       ${m.check?`<button class="btn ${m.ok?'btn-ghost':'btn-secondary'} btn-sm" data-ms="${m.check}">${m.ok?'Annuler':'C\'est fait'}</button>`:'<span></span>'}</div>`).join('')}</div></div>
+    <div class="stack">
+     <div class="card"><div class="card-h"><h2>${ico('trophy')}Ton profil LFM</h2>${lic?`<span class="lic" style="color:${LIC_COL[lic[0]]}">${lic[0]}</span>`:'<span class="tag p3">Pas encore de licence</span>'}</div>
+      ${lic?`<div class="grid g3" style="gap:10px;margin-bottom:14px">
+        <div class="card pad-s kpi"><div class="l">Elo</div><div class="v num" style="font-size:30px">${L.elo??'—'}</div><div class="d">${div?'Division '+div:''}</div></div>
+        <div class="card pad-s kpi"><div class="l">Safety LFM</div><div class="v num" style="font-size:30px">${L.sr??'—'}</div><div class="d">sur 9,99</div></div>
+        <div class="card pad-s kpi"><div class="l">Courses</div><div class="v num" style="font-size:30px">${R.lfmRaces}</div><div class="d">classées</div></div></div>
+        ${nl?`<div class="highlight"><p class="small"><b>Prochaine licence : ${nl[0]}</b></p><p class="small" style="margin-top:4px;color:#c6cfdd">${nl[1]?`${(L.elo||0).toLocaleString('fr-FR')} / ${nl[1].toLocaleString('fr-FR')} Elo · `:''}${R.lfmRaces} / ${nl[2]} courses · ${L.sr??0} / ${nl[3]} de safety</p></div>`:''}`
+      :`<p class="small muted">LFM (Low Fuel Motorsport) organise des courses classées toute la journée, gratuites. Il faut 80 de Safety ACC et réussir le test de licence. Ensuite, chaque course fait bouger ton Elo (ta vitesse) et ta safety LFM (ta propreté).</p>`}
+      <div class="form" style="margin-top:14px">
+       <div><label class="f">Elo</label><input type="number" id="lElo" value="${L.elo??''}" placeholder="—"></div>
+       <div><label class="f">Safety LFM</label><input type="number" id="lSr" step="0.01" value="${L.sr??''}" placeholder="2.50"></div>
+       <div><label class="f">Courses classées</label><input type="number" id="lRaces" value="${L.races||''}" placeholder="0"></div>
+       <div class="full"><label class="switch"><input type="checkbox" id="lLic" ${L.licensed?'checked':''}><span class="t"></span>J'ai ma licence LFM</label></div>
+       <div class="full"><button class="btn btn-primary" id="lSave">Enregistrer</button></div></div>
+      <p class="hint">Les barèmes de licence viennent d'un guide de 2024 : vérifie-les sur ton profil LFM. Après chaque course LFM, l'écran de fin de session met tout ça à jour.</p></div>
+     <div class="card"><div class="card-h"><h2>${ico('book')}Les étapes, concrètement</h2></div>
+      <ol class="howto small">
+       <li><b>LFM</b> : crée ton compte gratuit sur lowfuelmotorsport.com et lie ton Steam.</li>
+       <li><b>Test de licence</b> : dès 80 de Safety, 7 tours d'affilée sous 107 % du record.</li>
+       <li><b>Rookie, puis Iron</b> : 10 courses classées, finir propre avant tout.</li>
+       <li><b>Competition Servers</b> en parallèle : les 3 médailles du circuit sont obligatoires.</li>
+       <li><b>Championnat</b> : The SimGrid ou une ligue, dès que tu es régulier en division 3.</li>
+       <li><b>Équipe</b> : les équipes recrutent sur les résultats LFM et de championnat, pas sur le Total ACC.</li></ol></div>
+    </div></div>`;
+  $$('#page-career [data-ms]').forEach(b=>b.onclick=()=>{const k=b.dataset.ms;S.lfm[k]=!S.lfm[k];save();renderCareer()});
+  $('#lSave').onclick=()=>{const n=id=>{const v=$(id).value;return v===''?null:+v};S.lfm.elo=n('#lElo');S.lfm.sr=n('#lSr');S.lfm.races=n('#lRaces')||0;S.lfm.licensed=$('#lLic').checked;if(S.lfm.licensed)S.lfm.test=true;save();toast('Profil LFM enregistré');renderCareer()};
 }
 
 /* ================= GOALS ================= */
@@ -1021,7 +1098,7 @@ function renderMedals(){
 /* ================= MORE / SETTINGS ================= */
 function renderMore(){
   $('#page-more').innerHTML=`<div class="phead"><div><h1>Plus</h1></div></div><div class="morelist">
-   <a href="#/history">${ico('clock')}Historique</a><a href="#/medals">${ico('star')}Médailles</a><a href="#/guide">${ico('book')}Guide</a><a href="#/settings">${ico('more')}Réglages et sauvegarde</a></div>`;
+   <a href="#/career">${ico('trophy')}Compétition</a><a href="#/history">${ico('clock')}Historique</a><a href="#/medals">${ico('star')}Médailles</a><a href="#/guide">${ico('book')}Guide</a><a href="#/settings">${ico('more')}Réglages et sauvegarde</a></div>`;
 }
 /* ---------- shared GitHub form ---------- */
 const GH_HOWTO=`<ol class="howto small">
