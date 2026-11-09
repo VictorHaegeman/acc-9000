@@ -504,7 +504,7 @@ function roadmap(){const r=current(),L=S.lfm,lic=lfmLicense(),nl=lfmNext(),lfmRa
 function typeStats(){const g={};S.sessions.forEach(s=>{if(typeof s.saDelta!=='number')return;const o=g[s.type]=g[s.type]||{n:0,sum:0,c:0};o.n++;o.sum+=s.saDelta;o.c+=s.contacts||0});return Object.entries(g).map(([t,o])=>({type:t,n:o.n,avg:o.sum/o.n,c:o.c/o.n})).sort((a,b)=>b.avg-a.avg)}
 function saTrend(){const p=saPoints();if(p.length<2)return 0;const r=p.slice(-6);return r.at(-1).v-r[0].v}
 function phase(r){
-  if(r.SA<65)return{n:1,name:'Reconstruire la Safety',goal:'Remonter au-dessus de 65 SA et stopper la chute.',exit:{label:'Safety',val:r.SA,max:65}};
+  if(r.SA<65)return{n:1,name:'Reconstruire la Safety',goal:'Remonter à 65 de Safety et stopper la chute.',exit:{label:'Safety',val:r.SA,max:65}};
   if(r.SA<80)return{n:2,name:'Atteindre 80 de Safety',goal:'80, c\'est le ticket d\'entrée pour LFM et les Competition Servers. Prépare le test de licence LFM en parallèle.',exit:{label:'Safety',val:r.SA,max:80}};
   if(!S.lfm||!S.lfm.licensed)return{n:3,name:'Entrer en compétition',goal:'Passe le test de licence LFM et lance-toi en Competition Servers.',exit:{label:'Licence LFM',val:S.lfm&&S.lfm.test?1:0,max:2}};
   const nl=lfmNext();return{n:4,name:'Monter en LFM et championnats',goal:'Courses LFM régulières, licence supérieure, puis un championnat.',exit:nl?{label:'Elo vers '+nl[0],val:S.lfm.elo||0,max:nl[1]||1}:{label:'Elo',val:S.lfm.elo||0,max:S.lfm.elo||1}};
@@ -944,7 +944,7 @@ function renderSummary(el){
   const d=typeof s.saDelta==='number'?s.saDelta:null;const seLine=s.pcEst!=null?`<div class="levelup" style="border-color:var(--primary-line);background:var(--primary-soft);color:#cfe0ff">${ico('bolt')}<div><b>Top ${Math.max(1,Math.round(s.rank/s.of*100))} % · ≈ ${s.pcEst} de Pace</b><p class="small" style="margin-top:2px">${s.pcEst>current().PC?'Mieux que ton Pace actuel ('+current().PC+') : il devrait monter. Note-le au prochain relevé.':'Ton Pace garde ton meilleur résultat ('+current().PC+'). Vise le top '+seTarget(current().PC).top+' %.'}</p></div></div>`:'';
   el.innerHTML=`<div class="hero" style="text-align:center"><div class="eyebrow">Session enregistrée</div><h2>${esc(s.title)}</h2><p style="margin:0 auto">${esc(TYPES[s.type])} · ${esc(s.track)} · ${s.dur} min${toDelta!=null?` · total ${sign(toDelta)} points`:''}</p></div>
    ${seLine}
-   ${phNow.n>phBefore?`<div class="levelup">${ico('trophy')}<div><b>Phase ${phNow.n} débloquée : ${esc(phNow.name)}</b><p class="small" style="margin-top:2px">${esc(phNow.goal)} Tes recommandations changent dès maintenant.</p></div></div>`:''}
+   ${phNow.n>phBefore?`<div class="levelup">${ico('trophy')}<div><b>Phase ${phBefore} validée ✓ · Tu passes en phase ${phNow.n} sur 4</b><p class="small" style="margin-top:2px">Nouvel objectif : ${esc(phNow.name.charAt(0).toLowerCase()+phNow.name.slice(1))}. ${esc(phNow.goal)} Tes recommandations changent dès maintenant.</p></div></div>`:''}
    <div class="grid g4" style="margin-top:16px">
      <div class="card kpi"><div class="l">Safety</div><div class="v num ${d==null?'':d>0?'up':d<0?'down':'flat'}">${d==null?'—':sign(d)}</div><div class="d">${s.saAfter!=null?'Maintenant à '+s.saAfter:'Non renseignée'}</div></div>
      <div class="card kpi"><div class="l">Contacts</div><div class="v num ${s.contacts?'down':'up'}">${s.contacts}</div><div class="d">${s.contacts?(topCause?'Surtout : '+esc(topCause):'À réduire la prochaine fois'):'Session propre'}</div></div>
