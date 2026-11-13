@@ -640,7 +640,7 @@ function needs(){
     {k:'RC',val:r.RC,max:85,w:1,why:'duels et dépassements propres'},
     {k:'CN',val:r.CN,max:90,w:.8,why:'régularité tour après tour'},
     {k:'CC',val:r.CC,max:90,w:.8,why:'contrôle à la limite'},
-    {k:'CP',val:r.CP,max:50,w:.3,why:'optionnel : les Competition Servers sont quasi vides, LFM compte plus',lock:r.SA<80?'Se débloque à 80 de Safety':''},
+    {k:'CP',val:r.CP,max:50,w:.08,why:'optionnel : les Competition Servers sont quasi vides, LFM compte plus',lock:r.SA<80?'Se débloque à 80 de Safety':''},
   ];
   return L.filter(x=>x.val<x.max).map(x=>({...x,gap:(1-x.val/x.max)*x.w,tpl:x.lock?null:T.find(t=>t.boosts.includes(x.k))})).sort((a,b)=>(a.lock?1:0)-(b.lock?1:0)||b.gap-a.gap);
 }
