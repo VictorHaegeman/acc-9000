@@ -316,10 +316,10 @@ code{background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-ra
     <div class="grid g2">
       <div class="card"><span class="tag phase">Phase 1</span><h2 style="margin-top:10px">Reconstruire la Safety</h2><p class="muted small" style="margin-top:4px">SA &lt; 65 · sortie à 65 avec une tendance stable</p>
         <ul><li>Courses offline contre l'IA, grille pleine, IA réglée pour finir en milieu de peloton.</li><li>Pas de serveur public sans exigence SA tant que la tendance n'est pas repartie.</li><li>Médailles manquantes en parallèle : ça ne coûte rien en SA.</li></ul></div>
-      <div class="card"><span class="tag phase">Phase 2</span><h2 style="margin-top:10px">Atteindre 80 de Safety</h2><p class="muted small" style="margin-top:4px">SA 65–79 · 80 ouvre LFM et les Competition Servers</p>
+      <div class="card"><span class="tag phase">Phase 2</span><h2 style="margin-top:10px">Atteindre 80 de Safety</h2><p class="muted small" style="margin-top:4px">SA 65–79 · 80 ouvre LFM</p>
         <ul><li>Public uniquement sur serveurs filtrés, exigence SA la plus haute possible.</li><li>Objectif zéro contact en séries de sessions.</li><li>Entraîne le test de licence LFM : 7 tours d'affilée sous 107 % du record.</li></ul></div>
       <div class="card"><span class="tag phase">Phase 3</span><h2 style="margin-top:10px">Entrer en compétition</h2><p class="muted small" style="margin-top:4px">SA ≥ 80 · sortie avec ta licence LFM</p>
-        <ul><li>Special Events chaque semaine (Hotlap, Superpole, Hotstint). Pace ≈ 90 × (1 − rang ÷ participants) : top 33 % ≈ 60 de Pace.</li><li>Les serveurs publics normaux ne font pas monter le Pace.</li><li>Une course Competition Server par jour sur une piste à 3 médailles.</li><li>Télémétrie contre une référence, un virage à la fois.</li></ul></div>
+        <ul><li>Special Events chaque semaine (Hotlap, Superpole, Hotstint). Pace ≈ 90 × (1 − rang ÷ participants) : top 33 % ≈ 60 de Pace.</li><li>Les serveurs publics normaux ne font pas monter le Pace.</li><li>Les Competition Servers officiels sont quasi vides : n'en fais pas un objectif, LFM les remplace.</li><li>Télémétrie contre une référence, un virage à la fois.</li></ul></div>
       <div class="card"><span class="tag phase">Phase 4</span><h2 style="margin-top:10px">Monter en LFM et championnats</h2><p class="muted small" style="margin-top:4px">Licence LFM · cible : Bronze, Silver, championnat, équipe</p>
         <ul><li>LFM régulier, toujours la même voiture.</li><li>Un championnat The SimGrid ou une ligue : c'est là que les équipes recrutent.</li><li>Endurance en équipe : pneus, relais, régularité.</li></ul></div>
       <div class="card"><h2>Règles pour protéger ta Safety</h2>
@@ -492,7 +492,7 @@ function lfmNext(){const c=lfmLicense();if(!c)return null;const i=LIC.indexOf(c)
 function lfmDivision(){const e=S.lfm.elo;if(e==null)return null;return e>2000?1:e>1600?2:e>1300?3:4}
 function roadmap(){const r=current(),L=S.lfm,lic=lfmLicense(),nl=lfmNext(),lfmRaces=Math.max(L.races||0,S.sessions.filter(s=>s.type==='lfm').length);
   const M=[
-   {id:'sa',t:'80 de Safety',d:'Le ticket d\'entrée pour LFM et les Competition Servers.',ok:r.SA>=80,val:r.SA,max:80,auto:true},
+   {id:'sa',t:'80 de Safety',d:'Le ticket d\'entrée pour LFM.',ok:r.SA>=80,val:r.SA,max:80,auto:true},
    {id:'test',t:'Test de licence LFM',d:'7 tours valides d\'affilée, moyenne sous 107 % du record de la piste de licence. Tu peux l\'entraîner avant d\'avoir 80.',ok:!!L.test,check:'test'},
    {id:'first',t:'Première course LFM',d:'Licence Rookie, safety LFM de départ à 2,50.',ok:lfmRaces>=1,auto:true},
    {id:'iron',t:'Licence Iron',d:'10 courses classées et 4,0 de safety LFM.',ok:!!lic&&LIC.indexOf(lic)>=1,val:Math.min(lfmRaces,10),max:10,unit:'courses',auto:true},
@@ -505,8 +505,8 @@ function typeStats(){const g={};S.sessions.forEach(s=>{if(typeof s.saDelta!=='nu
 function saTrend(){const p=saPoints();if(p.length<2)return 0;const r=p.slice(-6);return r.at(-1).v-r[0].v}
 function phase(r){
   if(r.SA<65)return{n:1,name:'Reconstruire la Safety',goal:'Remonter à 65 de Safety et stopper la chute.',exit:{label:'Safety',val:r.SA,max:65}};
-  if(r.SA<80)return{n:2,name:'Atteindre 80 de Safety',goal:'80, c\'est le ticket d\'entrée pour LFM et les Competition Servers. Prépare le test de licence LFM en parallèle.',exit:{label:'Safety',val:r.SA,max:80}};
-  if(!S.lfm||!S.lfm.licensed)return{n:3,name:'Entrer en compétition',goal:'Passe le test de licence LFM et lance-toi en Competition Servers.',exit:{label:'Licence LFM',val:S.lfm&&S.lfm.test?1:0,max:2}};
+  if(r.SA<80)return{n:2,name:'Atteindre 80 de Safety',goal:'80, c\'est le ticket d\'entrée pour LFM. Prépare le test de licence en parallèle.',exit:{label:'Safety',val:r.SA,max:80}};
+  if(!S.lfm||!S.lfm.licensed)return{n:3,name:'Entrer en compétition',goal:'Passe le test de licence LFM et fais ta première course classée.',exit:{label:'Licence LFM',val:S.lfm&&S.lfm.test?1:0,max:2}};
   const nl=lfmNext();return{n:4,name:'Monter en LFM et championnats',goal:'Courses LFM régulières, licence supérieure, puis un championnat.',exit:nl?{label:'Elo vers '+nl[0],val:S.lfm.elo||0,max:nl[1]||1}:{label:'Elo',val:S.lfm.elo||0,max:S.lfm.elo||1}};
 }
 function projection(){const s=snaps().filter(x=>x.TO>0);if(s.length<2)return{need:true};
@@ -540,7 +540,7 @@ function templates(){
   {const ss=seStats(),tg=seTarget(r.PC);
   T.push({id:'se',type:'hotlap',title:'Special Event de la semaine',dur:30,boosts:['PC'],
     score:r.PC<60?52:25,
-    why:`Le Pace n'est pas requis pour les Competition Servers, mais c'est un bonus sans risque : classement en solo, ta Safety n'est pas en jeu. Vise le top ${tg.top} % pour ≈ ${tg.pc} de Pace.`,
+    why:`Le Pace n'est requis nulle part, c'est un bonus sans risque : classement en solo, ta Safety n'est pas en jeu. Vise le top ${tg.top} % pour ≈ ${tg.pc} de Pace.`,
     steps:['Ouvre le classement de l\'event : note le temps du top '+tg.top+' %','10 min d\'échauffement en entraînement, même piste et même voiture','Seul ton meilleur tour valide compte : enchaîne les runs','Zéro coupe de piste, un tour invalide ne compte pas','À la fin, note ton rang et le nombre de participants']})}
   const cnDrop=pv&&(r.CN<pv.CN||r.CC<pv.CC);
   T.push({id:'cn',type:'practice',title:'Régularité : 15 tours',dur:30,boosts:['CN','CC'],
@@ -549,9 +549,9 @@ function templates(){
   T.push({id:'tel',type:'practice',title:'Télémétrie et référence',dur:45,boosts:['PC'],
     score:ph.n>=2?50:28,why:'Le chrono se gagne virage par virage en te comparant à plus rapide que toi.',
     steps:['Enregistre 5 tours propres','Compare à un tour de référence plus rapide','Choisis LE virage qui te coûte le plus','10 tours en travaillant uniquement ce virage']});
-  if(r.SA>=80)T.push({id:'comp',type:'comp',title:'Competition Server',dur:45,boosts:['CP','RC','SA'],score:95,
-    why:`Ta Competition est à ${r.CP} : seul moyen de la monter.`,
-    steps:['Multijoueur, Competition Server','Il faut 3 médailles sur la piste du créneau','Ta CP est en jeu dès la qualif','En course : finir propre avant tout']});
+  if(r.SA>=80)T.push({id:'comp',type:'comp',title:'Competition Server',dur:45,boosts:['CP','RC','SA'],score:30,
+    why:'Optionnel : les serveurs officiels sont souvent vides et bogués. À tenter seulement aux heures de pointe sur une piste populaire, pour la CP.',
+    steps:['Multijoueur, Competition Server','Vérifie qu\'il y a du monde inscrit avant de t\'engager','Il faut 3 médailles sur la piste du créneau','Grille quasi vide : ressors et fais une course LFM ou IA à la place']});
   if(!S.lfm.test)T.push({id:'lfmtest',type:'practice',title:'Préparer le test de licence LFM',dur:30,boosts:['CN','CC'],
     score:ph.n===3?98:ph.n===2?(r.SA>=70?62:42):18,
     why:ph.n>=3?'Ta Safety est à 80 : le test de licence est la dernière marche avant tes premières courses LFM.':'7 tours d\'affilée sous 107 % du record : entraîne-le maintenant pour le passer dès que tu as 80 de Safety.',
@@ -623,7 +623,7 @@ function setupFor(t,r){
     setup:[['Mode','Entraînement'],['Circuit',fam,'','track'],C,['Tours','15 d\'affilée'],['Cible','Écart max de 0,5 s entre tes tours']]};
   if(t.id==='tel')return{track:fam,trackFree:true,reason:'Une piste connue, pour que l\'écart avec la référence vienne de ta technique.',
     setup:[['Mode','Entraînement'],['Circuit',fam,'','track'],C,['Outil','Ton outil de télémétrie habituel'],['Référence','Un tour plus rapide avec la même voiture']]};
-  if(t.type==='comp')return{reason:'Ta Competition ne monte qu\'ici.',setup:[['Mode','Multijoueur, Competition Server'],['Circuit','Celui du créneau','3 médailles obligatoires'],C,['Format','Qualif puis course']]};
+  if(t.type==='comp')return{reason:'Ta Competition ne monte qu\'ici, mais ces serveurs sont peu peuplés : n\'y reste que si la grille est réelle.',setup:[['Mode','Multijoueur, Competition Server'],['Circuit','Celui du créneau','3 médailles obligatoires'],C,['Format','Qualif puis course']]};
   if(t.id==='lfmtest')return{reason:'LFM demande 80 de Safety ACC et ce test de régularité. Exemple : record de Misano 1:31.895, il faut une moyenne sous 1:38.328.',
     setup:[['Mode','Entraînement, piste vide'],['Circuit','Piste de licence LFM du moment','Affichée sur le site LFM'],C,['Objectif','7 tours valides d\'affilée'],['Cible','Moyenne sous 107 % du record de la piste']]};
   if(t.type==='lfm')return{reason:'Les résultats LFM sont ceux que regardent les équipes.',setup:[['Plateforme','Low Fuel Motorsport'],['Circuit','Celui de la semaine'],C]};
@@ -634,13 +634,13 @@ function setupFor(t,r){
 function needs(){
   const r=current(),T=templates(),m=medalsTotal();
   const L=[
-    {k:'SA',val:r.SA,max:80,w:r.SA<65?2.2:1.6,why:'80 ouvre les Competition Servers'},
+    {k:'SA',val:r.SA,max:80,w:r.SA<65?2.2:1.6,why:'80 ouvre LFM'},
     {k:'PC',val:r.PC,max:60,w:1.2,why:'Special Events en solo, sans risque pour ta Safety'},
     {k:'TR',val:m,max:75,w:.9,why:'médailles de piste',unit:'médailles'},
     {k:'RC',val:r.RC,max:85,w:1,why:'duels et dépassements propres'},
     {k:'CN',val:r.CN,max:90,w:.8,why:'régularité tour après tour'},
     {k:'CC',val:r.CC,max:90,w:.8,why:'contrôle à la limite'},
-    {k:'CP',val:r.CP,max:50,w:1.1,why:'résultats en Competition Server',lock:r.SA<80?'Se débloque à 80 de Safety, avec les Competition Servers':''},
+    {k:'CP',val:r.CP,max:50,w:.3,why:'optionnel : les Competition Servers sont quasi vides, LFM compte plus',lock:r.SA<80?'Se débloque à 80 de Safety':''},
   ];
   return L.filter(x=>x.val<x.max).map(x=>({...x,gap:(1-x.val/x.max)*x.w,tpl:x.lock?null:T.find(t=>t.boosts.includes(x.k))})).sort((a,b)=>(a.lock?1:0)-(b.lock?1:0)||b.gap-a.gap);
 }
@@ -665,8 +665,7 @@ function buildGoals(){
   if(!S.weekPick[wk])S.weekPick[wk]=missingTracks().slice(0,3);
   const pk=S.weekPick[wk].filter(t=>!S.noTracks[t]);
   if(pk.length)G.push({id:'medals',p:ph.n<=2?2:3,title:'Médailles : '+pk.join(', '),detail:'Les 3 médailles sur chaque piste.',why:`${medalsTotal()}/75 médailles au total.`,prog:pk.filter(t=>S.medals[t]===3).length,n:pk.length});
-  if(r.PC<60){const tg=seTarget(r.PC);G.push({id:'pace-se',p:3,title:`Special Event : top ${tg.top} %`,detail:`Environ ${tg.pc} de Pace. Classement en solo, aucun risque pour ta Safety.`,why:`Pace à ${r.PC}. Il ne monte qu'avec les Special Events et les Competition Servers, pas avec les serveurs publics normaux.`,prog:W.filter(s=>SE.includes(s.type)&&s.rank&&s.of&&s.rank/s.of*100<=tg.top).length,n:1})}
-  if(r.SA>=80)G.push({id:'comp',p:1,title:'5 courses en Competition Server',detail:'Sur des pistes où tu as 3 médailles.',why:`Competition à ${r.CP}.`,prog:cnt(s=>s.type==='comp'),n:5});
+  if(r.PC<60){const tg=seTarget(r.PC);G.push({id:'pace-se',p:3,title:`Special Event : top ${tg.top} %`,detail:`Environ ${tg.pc} de Pace. Classement en solo, aucun risque pour ta Safety.`,why:`Pace à ${r.PC}. Il ne monte qu'avec les Special Events, pas avec les serveurs publics normaux.`,prog:W.filter(s=>SE.includes(s.type)&&s.rank&&s.of&&s.rank/s.of*100<=tg.top).length,n:1})}
   if(!S.lfm.test){if(ph.n===2)G.push({id:'lfm-prep',p:3,title:'Une session d\'entraînement au test LFM',detail:'7 tours d\'affilée sous 107 % du record.',why:'Tu le passeras dès 80 de Safety.',prog:W.filter(s=>s.tplId==='lfmtest').length,n:1});
     if(ph.n===3)G.push({id:'lfm-test',p:1,title:'Passer le test de licence LFM',detail:'Coche-le dans la page Compétition une fois validé.',why:'C\'est la dernière marche avant les courses LFM.',rule:true,broken:true,label:'Pas encore validé'})}
   if(ph.n===3&&S.lfm.test)G.push({id:'lfm-first',p:1,title:'Ta première course LFM',detail:'Inscris-toi à une course sur le site LFM. Objectif : finir propre, pas gagner.',why:'Licence validée : il ne manque plus que ta première course.',prog:cnt(s=>s.type==='lfm'),n:1});
@@ -734,7 +733,7 @@ function renderHome(){
    ${hero}
    <div class="card" style="margin-top:16px"><div class="card-h"><h2>${ico('up')}À faire monter en priorité</h2><span class="small muted">Calculé sur tes stats</span></div><div id="needs">${needsHTML(3)}</div></div>
    <div class="grid g4" style="margin-top:16px">
-     <div class="card kpi"><div class="l">${ico('shield')}Safety${r.saLive?' · dernière session':''}</div><div class="v num" style="color:${saCol}">${r.SA}<small> / 80</small></div><div class="meter"><i style="width:${Math.min(100,r.SA/80*100)}%;background:${saCol}"></i></div><div class="d">80 pour les Competition Servers</div></div>
+     <div class="card kpi"><div class="l">${ico('shield')}Safety${r.saLive?' · dernière session':''}</div><div class="v num" style="color:${saCol}">${r.SA}<small> / 80</small></div><div class="meter"><i style="width:${Math.min(100,r.SA/80*100)}%;background:${saCol}"></i></div><div class="d">80 pour LFM</div></div>
      <div class="card kpi"><div class="l">${ico('chart')}Total rating</div><div class="v num">${r.TO.toLocaleString('fr-FR')}</div><div class="meter"><i style="width:${Math.min(100,r.TO/S.target*100)}%"></i></div><div class="d">${projKPI(pr).ok?'Projection '+S.target.toLocaleString('fr-FR')+' : '+projKPI(pr).v:projKPI(pr).suspect?projKPI(pr).d:(S.target-r.TO>0?(S.target-r.TO).toLocaleString('fr-FR')+' points avant '+S.target.toLocaleString('fr-FR'):'Objectif atteint')} · bonus, sans effet sur l'accès</div></div>
      <div class="card kpi"><div class="l">${ico('star')}Médailles</div><div class="v num">${medalsTotal()}<small> / 75</small></div><div class="meter"><i style="width:${medalsTotal()/75*100}%;background:var(--warn)"></i></div><div class="d">${missingTracks().length} pistes incomplètes</div></div>
      ${(()=>{const R=roadmap(),n=R.now,i=R.M.indexOf(n);return n?`<a class="card kpi" href="#/career" style="color:inherit;border-color:var(--primary-line)"><div class="l">${ico('trophy')}Prochaine étape compétition</div><div class="v num" style="font-size:24px;margin-top:10px;line-height:1.2">${esc(n.t)}</div>${n.max?`<div class="meter"><i style="width:${Math.min(100,n.val/n.max*100)}%"></i></div>`:''}<div class="d">Étape ${i+1} sur ${R.M.length} · voir la feuille de route</div></a>`:`<a class="card kpi" href="#/career" style="color:inherit"><div class="l">${ico('trophy')}Compétition</div><div class="v num" style="font-size:24px;margin-top:10px">Feuille de route terminée</div></a>`})()}
@@ -987,7 +986,7 @@ function renderCareer(){
        <li><b>LFM</b> : crée ton compte gratuit sur lowfuelmotorsport.com et lie ton Steam.</li>
        <li><b>Test de licence</b> : dès 80 de Safety, 7 tours d'affilée sous 107 % du record.</li>
        <li><b>Rookie, puis Iron</b> : 10 courses classées, finir propre avant tout.</li>
-       <li><b>Competition Servers</b> en parallèle : les 3 médailles du circuit sont obligatoires.</li>
+       <li><b>Competition Servers</b> : optionnels, souvent vides. LFM les remplace entièrement.</li>
        <li><b>Championnat</b> : The SimGrid ou une ligue, dès que tu es régulier en division 3.</li>
        <li><b>Équipe</b> : les équipes recrutent sur les résultats LFM et de championnat, pas sur le Total ACC.</li></ol></div>
     </div></div>`;
