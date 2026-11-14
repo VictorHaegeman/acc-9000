@@ -344,8 +344,8 @@ const TYPES={ai:'Course vs IA',pubf:'Public filtré',pubo:'Public ouvert',comp:'
 const MULTI=['ai','pubf','pubo','comp','lfm','league'];
 const CAUSES={start:'Départ / tour 1',pass:'En dépassant',def:'En défendant',hit:'On m\'a percuté',other:'Autre'};
 const CAUSE_TIP={start:'Départ : laisse deux longueurs devant toi jusqu\'au deuxième virage',pass:'Dépasse seulement en ligne droite, ou avec la roue avant à hauteur avant le freinage',def:'Défense : une seule trajectoire, tu ne refermes jamais au freinage',hit:'Garde de la marge : ne reste pas dans l\'angle mort et laisse passer plus rapide que toi'};
-const LIC=[['Rookie',0,0,0],['Iron',0,10,4],['Iron+',1000,10,4],['Bronze',1300,10,4],['Bronze+',1500,10,4],['Silver',1700,25,5],['Silver+',2000,25,5],['Gold',2500,50,6.5],['Gold+',3500,50,6.5],['Platinum',5000,100,6.5],['Legend',6000,150,6.5],['Alien',8000,200,6.5]];
-const LIC_COL={Rookie:'#9ca3af',Iron:'#9ca3af','Iron+':'#9ca3af',Bronze:'#d29a63','Bronze+':'#d29a63',Silver:'#cbd5e1','Silver+':'#cbd5e1',Gold:'#fbbf24','Gold+':'#fbbf24',Platinum:'#a5f3fc',Legend:'#c4b5fd',Alien:'#86efac'};
+const LIC=[['Rookie',0,0,0],['Iron',0,10,0],['Iron+',1000,10,0],['Bronze',1300,10,0],['Bronze+',1500,10,0],['Silver',1700,25,0],['Silver+',2000,25,0],['Gold',2500,50,0],['Gold+',3200,50,0],['Platinum',4000,100,0],['Diamond',5000,100,0],['Legend',6000,150,0],['Alien',8000,200,0],['Hero',10000,200,0]];
+const LIC_COL={Rookie:'#f87171',Iron:'#9ca3af','Iron+':'#9ca3af',Bronze:'#d29a63','Bronze+':'#d29a63',Silver:'#cbd5e1','Silver+':'#cbd5e1',Gold:'#fbbf24','Gold+':'#fbbf24',Platinum:'#e5e7eb',Diamond:'#7aa2ff',Legend:'#c084fc',Alien:'#bef264',Hero:'#67e8f9'};
 const MIN_DUR={ai:20,medals:15,pubf:40,se:15,cn:20,tel:30,comp:40,lfm:60};
 
 const IC={
@@ -493,12 +493,12 @@ function lfmDivision(){const e=S.lfm.elo;if(e==null)return null;return e>2000?1:
 function roadmap(){const r=current(),L=S.lfm,lic=lfmLicense(),nl=lfmNext(),lfmRaces=Math.max(L.races||0,S.sessions.filter(s=>s.type==='lfm').length);
   const M=[
    {id:'sa',t:'80 de Safety',d:'Le ticket d\'entrée pour LFM.',ok:r.SA>=80,val:r.SA,max:80,auto:true},
-   {id:'test',t:'Test de licence LFM',d:'7 tours valides d\'affilée, moyenne sous 107 % du record de la piste de licence. Tu peux l\'entraîner avant d\'avoir 80.',ok:!!L.test,check:'test'},
+   {id:'test',t:'Compte LFM créé',d:'Login with Steam sur lowfuelmotorsport.com. Si LFM demande encore un test de licence, passe-le ici avant la 1re course.',ok:!!L.test,check:'test'},
    {id:'first',t:'Première course LFM',d:'Licence Rookie, safety LFM de départ à 2,50.',ok:lfmRaces>=1,auto:true},
-   {id:'iron',t:'Licence Iron',d:'10 courses classées et 4,0 de safety LFM.',ok:!!lic&&LIC.indexOf(lic)>=1,val:Math.min(lfmRaces,10),max:10,unit:'courses',auto:true},
+   {id:'iron',t:'Licence Iron',d:'10 courses classées. Finis-les propres : ta safety LFM compte pour l\'accès aux courses.',ok:!!lic&&LIC.indexOf(lic)>=1,val:Math.min(lfmRaces,10),max:10,unit:'courses',auto:true},
    {id:'bronze',t:'Licence Bronze · division 3',d:'1 300 Elo. Tu cours dans des splits plus rapides.',ok:!!lic&&LIC.indexOf(lic)>=3,val:L.elo||0,max:1300,unit:'Elo',auto:true},
    {id:'champ',t:'Premier championnat',d:'The SimGrid ou une ligue : des courses fixes, contre les mêmes pilotes. C\'est là que les équipes regardent.',ok:!!L.champ,check:'champ'},
-   {id:'silver',t:'Licence Silver · division 2',d:'1 700 Elo, 25 courses, 5,0 de safety LFM.',ok:!!lic&&LIC.indexOf(lic)>=5,val:L.elo||0,max:1700,unit:'Elo',auto:true},
+   {id:'silver',t:'Licence Silver · division 2',d:'1 700 Elo et 25 courses classées.',ok:!!lic&&LIC.indexOf(lic)>=5,val:L.elo||0,max:1700,unit:'Elo',auto:true},
    {id:'team',t:'Rouler pour une équipe',d:'Endurance en équipe ou line-up de championnat.',ok:!!L.team,check:'team'}];
   const now=M.find(m=>!m.ok);if(now)now.now=true;return{M,lic,nl,lfmRaces,now}}
 function typeStats(){const g={};S.sessions.forEach(s=>{if(typeof s.saDelta!=='number')return;const o=g[s.type]=g[s.type]||{n:0,sum:0,c:0};o.n++;o.sum+=s.saDelta;o.c+=s.contacts||0});return Object.entries(g).map(([t,o])=>({type:t,n:o.n,avg:o.sum/o.n,c:o.c/o.n})).sort((a,b)=>b.avg-a.avg)}
